@@ -10,8 +10,8 @@ A comprehensive platform for testing and validating trading strategies across mu
 - **Custom Strategies**: Write your own JavaScript trading strategies
 - **Real-time Backtesting**: Comprehensive backtesting engine with detailed performance metrics
 
-### 🌀 Chaos Engine - Mass Strategy Testing
-The Chaos Engine is the heart of the platform, providing:
+### 🌀 Caos Engine - Mass Strategy Testing
+The Caaos Engine is the heart of the platform, providing:
 
 - **Mass Testing**: Run millions of strategy tests across diverse market conditions
 - **Proof of Work**: Cryptographic validation ensuring test integrity and security
@@ -48,7 +48,7 @@ The Chaos Engine is the heart of the platform, providing:
 2. **Generate Market Data**: Create synthetic market data with customizable parameters
 3. **Configure Strategy**: Select from templates or write custom code
 4. **Run Backtest**: Execute single strategy test
-5. **Launch Chaos Engine**: Run mass testing across multiple scenarios
+5. **Launch Caos Engine**: Run mass testing across multiple scenarios
 6. **Review Results**: Analyze comprehensive quality reports and recommendations
 
 ## 📋 Strategy Development
@@ -86,7 +86,7 @@ return 0; // Hold
 - **Initial Capital**: Starting investment amount
 - **Trading Fees**: Per-trade commission costs
 
-### Chaos Engine Settings
+### Caos Engine Settings
 - **Iterations**: Number of tests in millions (0.001 = 1,000 tests)
 - **Market Scenarios**: Choose market conditions to test
 - **Stress Levels**: Testing intensity configuration
@@ -116,7 +116,7 @@ return 0; // Hold
 ## 📤 Export and Reporting
 
 ### Available Export Formats
-- **Chaos Results**: Raw testing data and metrics
+- **Caos Results**: Raw testing data and metrics
 - **Quality Report**: Comprehensive strategy assessment
 - **Full Report**: Complete analysis including all components
 
@@ -133,7 +133,7 @@ return 0; // Hold
 ### Core Modules
 - **MarketGenerator**: Synthetic market data creation
 - **Backtester**: Strategy execution engine
-- **ChaosEngine**: Mass testing with proof of work
+- **CaosEngine**: Mass testing with proof of work
 - **QualityReporter**: Comprehensive analysis and reporting
 - **TechnicalIndicators**: Technical analysis calculations
 
