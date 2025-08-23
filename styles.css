@@ -717,6 +717,45 @@ canvas {
   color: #666;
 }
 
+/* Performance Metrics */
+.chaos-performance-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+  margin-top: 15px;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.chaos-performance-metrics .metric {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+}
+
+.chaos-performance-metrics .label {
+  font-weight: 600;
+  color: #495057;
+  font-size: 13px;
+}
+
+.chaos-performance-metrics .value {
+  font-family: 'Courier New', monospace;
+  font-weight: 600;
+  color: #007bff;
+  font-size: 12px;
+  background: #f8f9fa;
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid #dee2e6;
+}
+
 /* Chaos Results */
 .chaos-results {
   background: #fff;
@@ -808,11 +847,140 @@ canvas {
   color: #666;
 }
 
+/* Quality Report Section */
+.chaos-quality-report {
+  margin-bottom: 30px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.chaos-quality-report h5 {
+  margin: 0 0 20px 0;
+  color: #333;
+  font-size: 18px;
+  border-bottom: 2px solid #66e0a3;
+  padding-bottom: 10px;
+}
+
+.quality-report-section {
+  margin-bottom: 20px;
+  padding: 15px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.quality-report-section h5 {
+  margin: 0 0 15px 0;
+  color: #495057;
+  font-size: 16px;
+  border-bottom: 1px solid #dee2e6;
+  padding-bottom: 8px;
+}
+
+.quality-report-section h6 {
+  margin: 0 0 10px 0;
+  color: #6c757d;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.quality-item {
+  margin: 12px 0;
+  padding: 12px;
+  border-radius: 6px;
+  border-left: 4px solid #6c757d;
+  background: #f8f9fa;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.quality-item.high {
+  border-left-color: #dc3545;
+  background: rgba(220, 53, 69, 0.1);
+}
+
+.quality-item.medium {
+  border-left-color: #ffc107;
+  background: rgba(255, 193, 7, 0.1);
+}
+
+.quality-item.low {
+  border-left-color: #28a745;
+  background: rgba(40, 167, 69, 0.1);
+}
+
+.quality-item strong {
+  color: #495057;
+  font-size: 14px;
+}
+
+.quality-item em {
+  color: #6c757d;
+  font-size: 12px;
+  font-style: italic;
+}
+
+.quality-subsection {
+  margin: 15px 0;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+}
+
+/* Proof of Work Section */
+.chaos-proof-of-work {
+  margin-bottom: 30px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.chaos-proof-of-work h5 {
+  margin: 0 0 20px 0;
+  color: #333;
+  font-size: 18px;
+  border-bottom: 2px solid #17a2b8;
+  padding-bottom: 10px;
+}
+
+.proof-of-work-report {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.pow-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+}
+
+.pow-metric {
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+  font-size: 13px;
+}
+
+.pow-metric strong {
+  color: #495057;
+  display: block;
+  margin-bottom: 5px;
+}
+
 /* Recommendations */
 .chaos-recommendations {
   background: #f8f9fa;
   padding: 20px;
   border-radius: 8px;
+  margin-bottom: 30px;
 }
 
 .chaos-recommendations h5 {
@@ -852,6 +1020,39 @@ canvas {
   font-style: italic;
 }
 
+/* Export Controls */
+.chaos-export-controls {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.chaos-export-controls h5 {
+  margin: 0 0 15px 0;
+  color: #333;
+  font-size: 18px;
+}
+
+.export-buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.export-buttons button {
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.export-buttons button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .chaos-controls .row {
@@ -869,5 +1070,17 @@ canvas {
   
   .chaos-kpi .val {
     font-size: 20px;
+  }
+  
+  .chaos-performance-metrics {
+    grid-template-columns: 1fr;
+  }
+  
+  .export-buttons {
+    flex-direction: column;
+  }
+  
+  .export-buttons button {
+    width: 100%;
   }
 }

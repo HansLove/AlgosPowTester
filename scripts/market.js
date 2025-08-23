@@ -9,33 +9,45 @@ export class MarketGenerator {
 
   // Generate correlated price series for multiple assets
   generateMultiAssetMarket(assets, settings) {
-    const { candles, seed, correlationMatrix } = settings;
+    const { candles, seed, correlationMatrix, volatility, scenario, stressLevel } = settings;
     const prng = this.mulberry32(this.seedToInt(seed));
     
     // Initialize data structure
     this.data = {
       assets: {},
       timestamps: [],
-      correlationMatrix: correlationMatrix || this.generateCorrelationMatrix(assets)
+      correlationMatrix: correlationMatrix || this.generateCorrelationMatrix(assets),
+      scenario: scenario || 'normal',
+      stressLevel: stressLevel || 'medium'
     };
 
-    // Generate individual asset series
+    // Generate individual asset series with enhanced parameters
     assets.forEach(assetKey => {
       const asset = ASSETS[assetKey];
       if (!asset) return;
 
+      // Apply scenario and stress level modifications
+      const enhancedParams = this.getEnhancedAssetParams(asset, scenario, stressLevel, volatility);
+      
       const series = this.generateAssetSeries(
         candles, 
         seed + '-' + assetKey, 
-        asset.defaultPrice, 
-        asset.defaultDrift, 
-        asset.defaultVolatility
+        enhancedParams.price,
+        enhancedParams.drift, 
+        enhancedParams.volatility
       );
+      
+      // Apply scenario-specific patterns
+      if (scenario && scenario !== 'normal') {
+        this.applyScenarioPatterns(series, scenario, stressLevel);
+      }
       
       this.data.assets[assetKey] = {
         ...asset,
         prices: series,
-        returns: this.calculateReturns(series)
+        returns: this.calculateReturns(series),
+        scenario: scenario,
+        stressLevel: stressLevel
       };
     });
 
@@ -254,5 +266,144 @@ export class MarketGenerator {
     while (u === 0) u = prng();
     while (v === 0) v = prng();
     return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+  }
+
+  // Get enhanced asset parameters based on scenario and stress level
+  getEnhancedAssetParams(asset, scenario, stressLevel, customVolatility) {
+    const basePrice = asset.defaultPrice;
+    const baseDrift = asset.defaultDrift;
+    const baseVolatility = customVolatility || asset.defaultVolatility;
+    
+    // Apply stress level modifications
+    const stressMultipliers = {
+      'low': { volatility: 0.7, drift: 0.8 },
+      'medium': { volatility: 1.0, drift: 1.0 },
+      'high': { volatility: 1.5, drift: 1.2 },
+      'extreme': { volatility: 2.5, drift: 1.5 }
+    };
+    
+    const stressMultiplier = stressMultipliers[stressLevel] || stressMultipliers.medium;
+    
+    // Apply scenario modifications
+    const scenarioMultipliers = {
+      'normal': { volatility: 1.0, drift: 1.0 },
+      'volatile': { volatility: 1.8, drift: 1.1 },
+      'crisis': { volatility: 2.2, drift: 0.7 },
+      'bubble': { volatility: 1.6, drift: 1.4 },
+      'trending': { volatility: 1.2, drift: 1.3 },
+      'sideways': { volatility: 0.8, drift: 0.9 },
+      'mixed': { volatility: 1.3, drift: 1.1 }
+    };
+    
+    const scenarioMultiplier = scenarioMultipliers[scenario] || scenarioMultipliers.normal;
+    
+    return {
+      price: basePrice,
+      drift: baseDrift * stressMultiplier.drift * scenarioMultiplier.drift,
+      volatility: baseVolatility * stressMultiplier.volatility * scenarioMultiplier.volatility
+    };
+  }
+
+  // Apply scenario-specific patterns to price series
+  applyScenarioPatterns(prices, scenario, stressLevel) {
+    switch (scenario) {
+      case 'crisis':
+        this.applyCrisisPattern(prices, stressLevel);
+        break;
+      case 'bubble':
+        this.applyBubblePattern(prices, stressLevel);
+        break;
+      case 'trending':
+        this.applyTrendingPattern(prices, stressLevel);
+        break;
+      case 'sideways':
+        this.applySidewaysPattern(prices, stressLevel);
+        break;
+      case 'volatile':
+        this.applyVolatilePattern(prices, stressLevel);
+        break;
+    }
+  }
+
+  // Apply crisis pattern (high volatility, crashes, recovery)
+  applyCrisisPattern(prices, stressLevel) {
+    const crashPoints = [0.3, 0.6, 0.8]; // Crisis points in the timeline
+    const crashSeverity = stressLevel === 'extreme' ? 0.4 : stressLevel === 'high' ? 0.25 : 0.15;
+    
+    crashPoints.forEach(point => {
+      const index = Math.floor(prices.length * point);
+      if (index < prices.length) {
+        // Apply crash
+        prices[index] *= (1 - crashSeverity);
+        
+        // Apply recovery pattern
+        for (let i = index + 1; i < Math.min(index + 50, prices.length); i++) {
+          const recoveryFactor = 1 + (Math.random() * 0.02 - 0.01);
+          prices[i] = prices[i - 1] * recoveryFactor;
+        }
+      }
+    });
+  }
+
+  // Apply bubble pattern (exponential growth, burst)
+  applyBubblePattern(prices, stressLevel) {
+    const bubbleStart = Math.floor(prices.length * 0.2);
+    const bubblePeak = Math.floor(prices.length * 0.7);
+    const bubbleBurst = Math.floor(prices.length * 0.8);
+    const bubbleStrength = stressLevel === 'extreme' ? 1.2 : stressLevel === 'high' ? 1.1 : 1.05;
+    
+    // Bubble growth phase
+    for (let i = bubbleStart; i < bubblePeak; i++) {
+      const growthFactor = 1 + (0.01 + (i - bubbleStart) * 0.001) * bubbleStrength;
+      prices[i] = prices[i - 1] * growthFactor;
+    }
+    
+    // Bubble burst
+    if (bubbleBurst < prices.length) {
+      const burstSeverity = 0.3 + (stressLevel === 'extreme' ? 0.4 : stressLevel === 'high' ? 0.2 : 0.1);
+      prices[bubbleBurst] *= (1 - burstSeverity);
+    }
+  }
+
+  // Apply trending pattern (consistent directional movement)
+  applyTrendingPattern(prices, stressLevel) {
+    const trendDirection = Math.random() > 0.5 ? 1 : -1;
+    const trendStrength = (0.001 + (stressLevel === 'extreme' ? 0.003 : stressLevel === 'high' ? 0.002 : 0.001));
+    
+    for (let i = 1; i < prices.length; i++) {
+      const trendComponent = trendDirection * trendStrength;
+      const randomComponent = (Math.random() - 0.5) * 0.005;
+      prices[i] = prices[i - 1] * (1 + trendComponent + randomComponent);
+    }
+  }
+
+  // Apply sideways pattern (mean reversion)
+  applySidewaysPattern(prices, stressLevel) {
+    const meanPrice = prices[0];
+    const reversionStrength = 0.001 + (stressLevel === 'extreme' ? 0.002 : stressLevel === 'high' ? 0.0015 : 0.001);
+    
+    for (let i = 1; i < prices.length; i++) {
+      const deviation = (meanPrice - prices[i - 1]) / meanPrice;
+      const reversionComponent = deviation * reversionStrength;
+      const randomComponent = (Math.random() - 0.5) * 0.003;
+      prices[i] = prices[i - 1] * (1 + reversionComponent + randomComponent);
+    }
+  }
+
+  // Apply volatile pattern (high volatility periods)
+  applyVolatilePattern(prices, stressLevel) {
+    const volatilitySpikes = [0.2, 0.4, 0.6, 0.8];
+    const spikeIntensity = stressLevel === 'extreme' ? 0.08 : stressLevel === 'high' ? 0.05 : 0.03;
+    
+    volatilitySpikes.forEach(point => {
+      const index = Math.floor(prices.length * point);
+      const spikeLength = 20 + Math.floor(Math.random() * 30);
+      
+      for (let i = index; i < Math.min(index + spikeLength, prices.length); i++) {
+        const volatility = 0.02 + spikeIntensity;
+        const change = (Math.random() - 0.5) * volatility;
+        prices[i] = prices[i - 1] * (1 + change);
+      }
+    });
   }
 }
