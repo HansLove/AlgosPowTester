@@ -2,6 +2,8 @@
 import { MarketGenerator } from './market.js';
 import { Backtester } from './backtester.js';
 import { StrategyReporter } from './reporting.js';
+import { ChaosEngine } from './chaos-engine.js';
+import { QualityReporter } from './quality-reporter.js';
 import { ASSETS, DEFAULT_SETTINGS, STRATEGY_TEMPLATES } from './config.js';
 import { $, fmt, storage, dom, string } from './utils.js';
 
@@ -10,8 +12,12 @@ export class TradingApp {
     this.marketGenerator = new MarketGenerator();
     this.backtester = null;
     this.reporter = null;
+    this.chaosEngine = new ChaosEngine();
+    this.qualityReporter = new QualityReporter();
     this.currentMarketData = null;
     this.currentResults = null;
+    this.chaosResults = null;
+    this.qualityReport = null;
     
     this.state = {
       selectedAssets: ['bitcoin'],
@@ -46,6 +52,17 @@ export class TradingApp {
     
     this.generateInitialMarket();
     console.log('Initial market generation started');
+    
+    // Setup Chaos Engine event listeners
+    this.setupChaosEngineListeners();
+  }
+
+  // Setup Chaos Engine event listeners
+  setupChaosEngineListeners() {
+    // Listen for chaos engine progress updates
+    window.addEventListener('chaosProgress', (event) => {
+      this.updateChaosProgress(event.detail);
+    });
   }
 
   // Setup event listeners
@@ -128,6 +145,34 @@ export class TradingApp {
       console.log('Load strategy button listener added');
     } else {
       console.warn('Load strategy button not found');
+    }
+    
+    // Chaos Engine
+    const btnChaosEngine = $('#btnChaosEngine');
+    if (btnChaosEngine) {
+      btnChaosEngine.addEventListener('click', () => this.launchChaosEngine());
+      console.log('Chaos Engine button listener added');
+    } else {
+      console.warn('Chaos Engine button not found');
+    }
+    
+    // Chaos Engine Export Buttons
+    const btnExportChaosResults = $('#btnExportChaosResults');
+    if (btnExportChaosResults) {
+      btnExportChaosResults.addEventListener('click', () => this.exportChaosResults());
+      console.log('Export Chaos Results button listener added');
+    }
+    
+    const btnExportQualityReport = $('#btnExportQualityReport');
+    if (btnExportQualityReport) {
+      btnExportQualityReport.addEventListener('click', () => this.exportQualityReport());
+      console.log('Export Quality Report button listener added');
+    }
+    
+    const btnExportFullReport = $('#btnExportFullReport');
+    if (btnExportFullReport) {
+      btnExportFullReport.addEventListener('click', () => this.exportFullReport());
+      console.log('Export Full Report button listener added');
     }
     
     // Settings changes
@@ -868,6 +913,510 @@ export class TradingApp {
     const savedState = storage.get('tradingAppState');
     if (savedState) {
       this.state = { ...this.state, ...savedState };
+    }
+  }
+
+  // 🌀 Launch Chaos Engine for mass strategy testing
+  async launchChaosEngine() {
+    if (!this.currentMarketData) {
+      alert('Please generate market data first');
+      return;
+    }
+    
+    try {
+      // Get Chaos Engine configuration
+      const iterations = parseFloat($('#chaosIterations')?.value || 0.1);
+      const scenario = $('#chaosScenarios')?.value || 'normal';
+      const stressLevel = $('#chaosStressLevel')?.value || 'medium';
+      const proofOfWorkDifficulty = parseInt($('#chaosProofOfWorkDifficulty')?.value || 1);
+      
+      if (iterations <= 0) {
+        alert('Please enter a valid number of iterations');
+        return;
+      }
+      
+      const totalTests = Math.floor(iterations * 1000000);
+      console.log(`🚀 Launching Chaos Engine: ${totalTests.toLocaleString()} tests`);
+      
+      // Show progress
+      this.showChaosProgress();
+      
+      // Get current strategy configuration
+      const strategyConfig = {
+        type: this.state.strategy.type,
+        params: this.state.strategy.params,
+        customCode: this.state.strategy.customCode
+      };
+      
+      // Market settings
+      const marketSettings = {
+        candles: parseInt($('#candles')?.value || this.state.settings.candles),
+        fee: parseFloat($('#fee')?.value || this.state.settings.fee),
+        initialCapital: parseFloat($('#initialCapital')?.value || this.state.settings.initialCapital),
+        selectedAssets: this.state.selectedAssets
+      };
+      
+      // Launch Chaos Engine
+      const results = await this.chaosEngine.launchMassTesting({
+        iterations,
+        scenario,
+        stressLevel,
+        strategyConfig,
+        marketSettings,
+        proofOfWorkDifficulty
+      });
+      
+      // Store results
+      this.chaosResults = results.results;
+      this.qualityReport = results.qualityReport;
+      
+      // Display results
+      this.displayChaosResults(results);
+      
+      console.log('🌀 Chaos Engine completed:', results);
+      
+    } catch (error) {
+      console.error('Chaos Engine error:', error);
+      alert(`Chaos Engine error: ${error.message}`);
+      this.hideChaosProgress();
+    }
+  }
+
+  // Show Chaos Engine progress
+  showChaosProgress() {
+    const progressContainer = $('.chaos-progress');
+    const resultsContainer = $('.chaos-results');
+    const btnChaosEngine = $('#btnChaosEngine');
+    
+    if (progressContainer) progressContainer.style.display = 'block';
+    if (resultsContainer) resultsContainer.style.display = 'none';
+    if (btnChaosEngine) {
+      btnChaosEngine.disabled = true;
+      btnChaosEngine.textContent = '🔄 Running...';
+    }
+  }
+
+  // Hide Chaos Engine progress
+  hideChaosProgress() {
+    const progressContainer = $('.chaos-progress');
+    const btnChaosEngine = $('#btnChaosEngine');
+    
+    if (progressContainer) progressContainer.style.display = 'none';
+    if (btnChaosEngine) {
+      btnChaosEngine.disabled = false;
+      btnChaosEngine.textContent = '🚀 Launch Chaos Engine';
+    }
+  }
+
+  // Update Chaos Engine progress
+  updateChaosProgress(progressData) {
+    const { current, total, percentage, performanceMetrics, proofOfWork } = progressData;
+    
+    // Update progress bar
+    const progressFill = $('#chaosProgressFill');
+    if (progressFill) {
+      progressFill.style.width = percentage + '%';
+    }
+    
+    // Update progress text
+    const progressText = $('#chaosProgressText');
+    if (progressText) {
+      progressText.textContent = percentage.toFixed(1) + '% Complete';
+    }
+    
+    // Update tests completed
+    const testsCompleted = $('#chaosTestsCompleted');
+    if (testsCompleted) {
+      testsCompleted.textContent = current.toLocaleString() + ' tests completed';
+    }
+    
+    // Update performance metrics
+    if (performanceMetrics) {
+      const timeRemaining = $('#chaosTimeRemaining');
+      if (timeRemaining && performanceMetrics.estimatedTimeRemaining > 0) {
+        const minutes = Math.floor(performanceMetrics.estimatedTimeRemaining / 60);
+        const seconds = Math.floor(performanceMetrics.estimatedTimeRemaining % 60);
+        timeRemaining.textContent = `${minutes}m ${seconds}s remaining`;
+      }
+      
+      const testsPerSecond = $('#chaosTestsPerSecond');
+      if (testsPerSecond) {
+        testsPerSecond.textContent = performanceMetrics.testsPerSecond.toFixed(1) + ' tests/sec';
+      }
+    }
+    
+    // Update proof of work info
+    if (proofOfWork) {
+      const powHash = $('#chaosPowHash');
+      const powNonce = $('#chaosPowNonce');
+      
+      if (powHash) powHash.textContent = proofOfWork.hash.substring(0, 16) + '...';
+      if (powNonce) powNonce.textContent = proofOfWork.nonce.toLocaleString();
+    }
+  }
+
+  // Display Chaos Engine results
+  displayChaosResults(results) {
+    // Hide progress
+    this.hideChaosProgress();
+    
+    // Show results container
+    const resultsContainer = $('.chaos-results');
+    if (resultsContainer) {
+      resultsContainer.style.display = 'block';
+    }
+    
+    // Update summary KPIs
+    this.updateChaosSummary(results);
+    
+    // Render charts
+    this.renderChaosCharts(results);
+    
+    // Render scenario breakdown
+    this.renderChaosScenarioBreakdown(results);
+    
+    // Render quality report
+    this.renderQualityReport(results.qualityReport);
+    
+    // Render proof of work report
+    this.renderProofOfWorkReport(results.proofOfWork);
+  }
+
+  // Update Chaos Engine summary
+  updateChaosSummary(results) {
+    const { summary } = results;
+    
+    // Update KPI displays
+    const elements = {
+      'chaosTotalTests': summary.totalTests.toLocaleString(),
+      'chaosSuccessRate': summary.successRate.toFixed(1) + '%',
+      'chaosAvgReturn': summary.avgReturn.toFixed(2) + '%',
+      'chaosMaxDD': (summary.avgDrawdown).toFixed(2) + '%',
+      'chaosSharpe': summary.avgSharpe.toFixed(2),
+      'chaosSurvivalRate': summary.survivalRate.toFixed(1) + '%'
+    };
+    
+    Object.entries(elements).forEach(([id, value]) => {
+      const element = $(`#${id}`);
+      if (element) element.textContent = value;
+    });
+  }
+
+  // Render Chaos Engine charts
+  renderChaosCharts(results) {
+    // Return distribution chart
+    this.renderDistributionChart('chaosReturnChart', 
+      results.tests.map(t => t.summary?.totalReturn || 0), 
+      'Return Distribution (%)', 
+      'Frequency'
+    );
+    
+    // Drawdown distribution chart
+    this.renderDistributionChart('chaosDrawdownChart', 
+      results.tests.map(t => t.summary?.maxDrawdown || 0), 
+      'Max Drawdown (%)', 
+      'Frequency'
+    );
+  }
+
+  // Render distribution chart
+  renderDistributionChart(canvasId, data, xLabel, yLabel) {
+    const canvas = $(`#${canvasId}`);
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    const width = canvas.width;
+    const height = canvas.height;
+    
+    ctx.clearRect(0, 0, width, height);
+    
+    // Create histogram
+    const min = Math.min(...data);
+    const max = Math.max(...data);
+    const binCount = 20;
+    const binSize = (max - min) / binCount;
+    
+    const bins = new Array(binCount).fill(0);
+    data.forEach(value => {
+      const binIndex = Math.min(Math.floor((value - min) / binSize), binCount - 1);
+      bins[binIndex]++;
+    });
+    
+    const maxBin = Math.max(...bins);
+    
+    // Draw histogram
+    ctx.fillStyle = '#66e0a3';
+    bins.forEach((count, i) => {
+      const x = (i / binCount) * (width - 40) + 20;
+      const barHeight = (count / maxBin) * (height - 60);
+      const y = height - 20 - barHeight;
+      
+      ctx.fillRect(x, y, (width - 40) / binCount - 2, barHeight);
+    });
+    
+    // Draw labels
+    ctx.fillStyle = '#333';
+    ctx.font = '12px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText(xLabel, width / 2, height - 5);
+  }
+
+  // Render Chaos Engine scenario breakdown
+  renderChaosScenarioBreakdown(results) {
+    const container = $('#chaosScenarioBreakdown');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    Object.entries(results.scenarioResults).forEach(([scenario, data]) => {
+      if (data.count === 0) return;
+      
+      const avgReturn = data.returns.reduce((a, b) => a + b, 0) / data.returns.length;
+      const avgDrawdown = data.drawdowns.reduce((a, b) => a + b, 0) / data.drawdowns.length;
+      const avgSharpe = data.sharpes.reduce((a, b) => a + b, 0) / data.sharpes.length;
+      
+      const div = dom.create('div', {
+        className: 'scenario-item'
+      });
+      
+      div.innerHTML = `
+        <h6>${scenario.charAt(0).toUpperCase() + scenario.slice(1)} Markets</h6>
+        <p>Tests: ${data.count} | Avg Return: ${avgReturn.toFixed(2)}% | Avg DD: ${(avgDrawdown).toFixed(2)}% | Avg Sharpe: ${avgSharpe.toFixed(2)}</p>
+      `;
+      
+      container.appendChild(div);
+    });
+  }
+
+  // Render quality report
+  renderQualityReport(qualityReport) {
+    const container = $('#chaosQualityReport');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    if (!qualityReport) {
+      container.innerHTML = '<p>No quality report available</p>';
+      return;
+    }
+    
+    // Executive summary
+    const summarySection = this.createQualityReportSection('Executive Summary', qualityReport.executiveSummary);
+    container.appendChild(summarySection);
+    
+    // Quality metrics
+    const metricsSection = this.createQualityReportSection('Quality Metrics', qualityReport.qualityMetrics);
+    container.appendChild(metricsSection);
+    
+    // Risk assessment
+    const riskSection = this.createQualityReportSection('Risk Assessment', qualityReport.riskAssessment);
+    container.appendChild(riskSection);
+    
+    // Recommendations
+    const recommendationsSection = this.createQualityReportSection('Recommendations', qualityReport.recommendations);
+    container.appendChild(recommendationsSection);
+  }
+
+  // Create quality report section
+  createQualityReportSection(title, data) {
+    const section = dom.create('div', {
+      className: 'quality-report-section'
+    });
+    
+    const header = dom.create('h5', { textContent: title });
+    section.appendChild(header);
+    
+    if (Array.isArray(data)) {
+      data.forEach(item => {
+        const div = dom.create('div', {
+          className: `quality-item ${item.priority || 'medium'}`
+        });
+        div.innerHTML = `
+          <strong>${item.category || item.factor || 'Item'}</strong> 
+          ${item.priority ? `(${item.priority} priority)` : ''}<br>
+          ${item.message || item.description || item}<br>
+          ${item.action ? `<em>Action: ${item.action}</em>` : ''}
+        `;
+        section.appendChild(div);
+      });
+    } else if (typeof data === 'object') {
+      Object.entries(data).forEach(([key, value]) => {
+        if (typeof value === 'object') {
+          const subsection = dom.create('div', {
+            className: 'quality-subsection'
+          });
+          subsection.innerHTML = `<h6>${string.capitalize(key)}</h6>`;
+          
+          Object.entries(value).forEach(([subKey, subValue]) => {
+            const item = dom.create('div', {
+              className: 'quality-item'
+            });
+            item.innerHTML = `<strong>${string.capitalize(subKey)}:</strong> ${subValue}`;
+            subsection.appendChild(item);
+          });
+          
+          section.appendChild(subsection);
+        } else {
+          const item = dom.create('div', {
+            className: 'quality-item'
+          });
+          item.innerHTML = `<strong>${string.capitalize(key)}:</strong> ${value}`;
+          section.appendChild(item);
+        }
+      });
+    } else {
+      const item = dom.create('div', {
+        className: 'quality-item'
+      });
+      item.textContent = data;
+      section.appendChild(item);
+    }
+    
+    return section;
+  }
+
+  // Render proof of work report
+  renderProofOfWorkReport(proofOfWork) {
+    const container = $('#chaosProofOfWorkReport');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    if (!proofOfWork) {
+      container.innerHTML = '<p>No proof of work data available</p>';
+      return;
+    }
+    
+    const report = dom.create('div', {
+      className: 'proof-of-work-report'
+    });
+    
+    report.innerHTML = `
+      <h5>🔐 Proof of Work Report</h5>
+      <div class="pow-metrics">
+        <div class="pow-metric">
+          <strong>Difficulty:</strong> ${proofOfWork.difficulty}
+        </div>
+        <div class="pow-metric">
+          <strong>Final Hash:</strong> ${proofOfWork.hash.substring(0, 32)}...
+        </div>
+        <div class="pow-metric">
+          <strong>Total Nonce:</strong> ${proofOfWork.nonce.toLocaleString()}
+        </div>
+        <div class="pow-metric">
+          <strong>Target:</strong> ${proofOfWork.target.toExponential(2)}
+        </div>
+      </div>
+    `;
+    
+    container.appendChild(report);
+  }
+
+  // Export Chaos Engine results
+  exportChaosResults() {
+    if (!this.chaosResults) {
+      alert('No Chaos Engine results available to export');
+      return;
+    }
+    
+    const exportData = this.chaosEngine.exportResults(this.chaosResults);
+    const blob = new Blob([exportData], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `chaos_engine_results_${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    
+    URL.revokeObjectURL(url);
+  }
+
+  // Export quality report
+  exportQualityReport() {
+    if (!this.qualityReport) {
+      alert('No quality report available to export');
+      return;
+    }
+    
+    const exportData = this.qualityReporter.exportReport('json');
+    const blob = new Blob([exportData], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `quality_report_${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    
+    URL.revokeObjectURL(url);
+  }
+
+  // Export full comprehensive report
+  exportFullReport() {
+    if (!this.chaosResults || !this.qualityReport) {
+      alert('No complete results available to export');
+      return;
+    }
+    
+    try {
+      // Create comprehensive report
+      const fullReport = {
+        metadata: {
+          exportTimestamp: new Date().toISOString(),
+          version: '1.0.0',
+          platform: 'Advanced Trading Algorithm Tester',
+          description: 'Comprehensive strategy testing report including Chaos Engine results and quality assessment'
+        },
+        strategy: {
+          type: this.state.strategy.type,
+          params: this.state.strategy.params,
+          customCode: this.state.strategy.customCode
+        },
+        market: {
+          selectedAssets: this.state.selectedAssets,
+          settings: this.state.settings,
+          marketData: this.currentMarketData ? {
+            candles: this.currentMarketData.timestamps.length,
+            assets: Object.keys(this.currentMarketData.assets),
+            seed: this.state.settings.seed
+          } : null
+        },
+        chaosEngine: {
+          results: this.chaosResults,
+          qualityReport: this.qualityReport,
+          performanceMetrics: this.chaosEngine.performanceMetrics,
+          proofOfWork: this.chaosEngine.proofOfWork
+        },
+        summary: {
+          totalTests: this.chaosResults.totalTests,
+          successRate: this.chaosResults.summary.successRate,
+          avgReturn: this.chaosResults.summary.avgReturn,
+          avgDrawdown: this.chaosResults.summary.avgDrawdown,
+          avgSharpe: this.chaosResults.summary.avgSharpe,
+          overallGrade: this.qualityReport.executiveSummary?.overallGrade || 'N/A',
+          riskLevel: this.qualityReport.executiveSummary?.riskLevel || 'N/A'
+        },
+        recommendations: this.qualityReport.recommendations || [],
+        riskAssessment: this.qualityReport.riskAssessment || {},
+        qualityMetrics: this.qualityReport.qualityMetrics || {}
+      };
+      
+      // Export as JSON
+      const exportData = JSON.stringify(fullReport, null, 2);
+      const blob = new Blob([exportData], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `comprehensive_trading_report_${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+      
+      URL.revokeObjectURL(url);
+      
+      console.log('Full comprehensive report exported successfully');
+      
+    } catch (error) {
+      console.error('Error exporting full report:', error);
+      alert('Error exporting full report: ' + error.message);
     }
   }
 }

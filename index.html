@@ -133,7 +133,7 @@
         <div class="body">
           <h3>5) 🌀 Chaos Engine - Mass Strategy Testing</h3>
           <div class="chaos-engine-header">
-            <p class="muted">Test your strategies across millions of simulated markets with realistic market patterns, volatility regimes, and extreme scenarios.</p>
+            <p class="muted">Test your strategies across millions of simulated markets with realistic market patterns, volatility regimes, and extreme scenarios. Includes proof of work validation for enhanced security.</p>
           </div>
           
           <div class="chaos-controls">
@@ -164,6 +164,15 @@
                 </select>
               </div>
               <div>
+                <label>Proof of Work Difficulty</label><br/>
+                <select id="chaosProofOfWorkDifficulty">
+                  <option value="1" selected>Level 1 (Light)</option>
+                  <option value="2">Level 2 (Medium)</option>
+                  <option value="3">Level 3 (Heavy)</option>
+                  <option value="4">Level 4 (Extreme)</option>
+                </select>
+              </div>
+              <div>
                 <label>&nbsp;</label><br/>
                 <button id="btnChaosEngine" class="primary chaos-btn">🚀 Launch Chaos Engine</button>
               </div>
@@ -176,6 +185,26 @@
               <div class="progress-text">
                 <span id="chaosProgressText">0% Complete</span>
                 <span id="chaosTestsCompleted">0 tests completed</span>
+              </div>
+              
+              <!-- Performance Metrics -->
+              <div class="chaos-performance-metrics">
+                <div class="metric">
+                  <span class="label">Tests/sec:</span>
+                  <span id="chaosTestsPerSecond" class="value">0</span>
+                </div>
+                <div class="metric">
+                  <span class="label">Time Remaining:</span>
+                  <span id="chaosTimeRemaining" class="value">--</span>
+                </div>
+                <div class="metric">
+                  <span class="label">PoW Hash:</span>
+                  <span id="chaosPowHash" class="value">--</span>
+                </div>
+                <div class="metric">
+                  <span class="label">Nonce:</span>
+                  <span id="chaosPowNonce" class="value">0</span>
+                </div>
               </div>
             </div>
           </div>
@@ -225,9 +254,31 @@
               <div id="chaosScenarioBreakdown"></div>
             </div>
             
+            <!-- Quality Report Section -->
+            <div class="chaos-quality-report">
+              <h5>📋 Strategy Quality Assessment</h5>
+              <div id="chaosQualityReport"></div>
+            </div>
+            
+            <!-- Proof of Work Report -->
+            <div class="chaos-proof-of-work">
+              <h5>🔐 Proof of Work Validation</h5>
+              <div id="chaosProofOfWorkReport"></div>
+            </div>
+            
             <div class="chaos-recommendations">
               <h5>💡 Strategy Recommendations</h5>
               <div id="chaosRecommendations"></div>
+            </div>
+            
+            <!-- Export Controls -->
+            <div class="chaos-export-controls">
+              <h5>📤 Export Results</h5>
+              <div class="export-buttons">
+                <button id="btnExportChaosResults" class="ghost">Export Chaos Results</button>
+                <button id="btnExportQualityReport" class="ghost">Export Quality Report</button>
+                <button id="btnExportFullReport" class="primary">Export Full Report</button>
+              </div>
             </div>
           </div>
         </div>
@@ -564,6 +615,118 @@
         
         // Add Chaos Engine event listener
         document.getElementById('btnChaosEngine')?.addEventListener('click', () => this.launchChaosEngine());
+        
+        // Add Chaos Engine export event listeners
+        document.getElementById('btnExportChaosResults')?.addEventListener('click', () => this.exportChaosResults());
+        document.getElementById('btnExportQualityReport')?.addEventListener('click', () => this.exportQualityReport());
+        document.getElementById('btnExportFullReport')?.addEventListener('click', () => this.exportFullReport());
+      }
+      
+      // Export Chaos Engine results
+      exportChaosResults() {
+        if (!this.chaosResults) {
+          alert('No Chaos Engine results available to export');
+          return;
+        }
+        
+        const exportData = JSON.stringify(this.chaosResults, null, 2);
+        const blob = new Blob([exportData], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `chaos_engine_results_${new Date().toISOString().split('T')[0]}.json`;
+        a.click();
+        
+        URL.revokeObjectURL(url);
+      }
+      
+      // Export quality report
+      exportQualityReport() {
+        if (!this.qualityReport) {
+          alert('No quality report available to export');
+          return;
+        }
+        
+        const exportData = JSON.stringify(this.qualityReport, null, 2);
+        const blob = new Blob([exportData], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `quality_report_${new Date().toISOString().split('T')[0]}.json`;
+        a.click();
+        
+        URL.revokeObjectURL(url);
+      }
+      
+      // Export full comprehensive report
+      exportFullReport() {
+        if (!this.chaosResults || !this.qualityReport) {
+          alert('No complete results available to export');
+          return;
+        }
+        
+        try {
+          // Create comprehensive report
+          const fullReport = {
+            metadata: {
+              exportTimestamp: new Date().toISOString(),
+              version: '1.0.0',
+              platform: 'Advanced Trading Algorithm Tester',
+              description: 'Comprehensive strategy testing report including Chaos Engine results and quality assessment'
+            },
+            strategy: {
+              type: document.getElementById('strategyType')?.value || 'ma',
+              params: this.getStrategyParams(document.getElementById('strategyType')?.value || 'ma'),
+              customCode: document.getElementById('customStrategyCode')?.value || ''
+            },
+            market: {
+              selectedAssets: this.selectedAssets,
+              settings: {
+                candles: parseInt(document.getElementById('candles')?.value || 1000),
+                seed: document.getElementById('seed')?.value || 'markets-2025',
+                fee: parseFloat(document.getElementById('fee')?.value || 0.001),
+                initialCapital: parseFloat(document.getElementById('initialCapital')?.value || 10000)
+              },
+              marketData: this.marketData ? {
+                candles: this.marketData.timestamps.length,
+                assets: Object.keys(this.marketData.assets),
+                seed: document.getElementById('seed')?.value || 'markets-2025'
+              } : null
+            },
+            chaosEngine: {
+              results: this.chaosResults,
+              qualityReport: this.qualityReport
+            },
+            summary: {
+              totalTests: this.chaosResults.totalTests,
+              successRate: this.chaosResults.summary.successRate,
+              avgReturn: this.chaosResults.summary.avgReturn,
+              avgDrawdown: this.chaosResults.summary.avgDrawdown,
+              avgSharpe: this.chaosResults.summary.avgSharpe
+            },
+            recommendations: this.chaosResults.recommendations || []
+          };
+          
+          // Export as JSON
+          const exportData = JSON.stringify(fullReport, null, 2);
+          const blob = new Blob([exportData], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `comprehensive_trading_report_${new Date().toISOString().split('T')[0]}.json`;
+          a.click();
+          
+          URL.revokeObjectURL(url);
+          
+          console.log('Full comprehensive report exported successfully');
+          
+        } catch (error) {
+          console.error('Error exporting full report:', error);
+          alert('Error exporting full report: ' + error.message);
+        }
       }
       
       // 🌀 Chaos Engine - Mass Strategy Testing
