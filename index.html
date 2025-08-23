@@ -452,6 +452,492 @@
         });
         
         document.getElementById('btnGenerate')?.addEventListener('click', () => this.generateMarket());
+        
+        // Add backtesting event listeners
+        document.getElementById('btnBacktest')?.addEventListener('click', () => this.runBacktest());
+        document.getElementById('btnResetStrat')?.addEventListener('click', () => this.resetStrategy());
+      }
+      
+      // Run backtest with selected strategy
+      runBacktest() {
+        if (!this.marketData) {
+          alert('Please generate market data first');
+          return;
+        }
+        
+        console.log('Running backtest...');
+        
+        const strategyType = document.getElementById('strategyType')?.value || 'ma';
+        const fee = parseFloat(document.getElementById('fee')?.value || 0.001);
+        const initialCapital = parseFloat(document.getElementById('initialCapital')?.value || 10000);
+        
+        // Get strategy parameters
+        const params = this.getStrategyParams(strategyType);
+        
+        // Execute backtest
+        const results = this.executeStrategy(strategyType, params, fee, initialCapital);
+        
+        // Display results
+        this.displayBacktestResults(results);
+        
+        console.log('Backtest completed:', results);
+      }
+      
+      // Get strategy parameters based on type
+      getStrategyParams(strategyType) {
+        const params = {};
+        
+        if (strategyType === 'ma') {
+          params.fastMA = parseInt(document.getElementById('param_fastMA')?.value || 10);
+          params.slowMA = parseInt(document.getElementById('param_slowMA')?.value || 30);
+        } else if (strategyType === 'rsi') {
+          params.period = parseInt(document.getElementById('param_period')?.value || 14);
+          params.oversold = 30;
+          params.overbought = 70;
+        }
+        
+        return params;
+      }
+      
+      // Execute trading strategy
+      executeStrategy(strategyType, params, fee, initialCapital) {
+        const results = {
+          trades: [],
+          equity: [initialCapital],
+          positions: {},
+          currentCapital: initialCapital,
+          totalTrades: 0,
+          profitableTrades: 0,
+          totalFees: 0,
+          maxDrawdown: 0,
+          peakCapital: initialCapital
+        };
+        
+        // Initialize positions for each asset
+        this.selectedAssets.forEach(assetKey => {
+          results.positions[assetKey] = 0;
+        });
+        
+        // Execute strategy for each asset
+        this.selectedAssets.forEach(assetKey => {
+          const assetResults = this.executeAssetStrategy(
+            assetKey, 
+            strategyType, 
+            params, 
+            fee, 
+            results
+          );
+          
+          // Merge results
+          results.trades.push(...assetResults.trades);
+          results.totalTrades += assetResults.totalTrades;
+          results.profitableTrades += assetResults.profitableTrades;
+          results.totalFees += assetResults.totalFees;
+        });
+        
+        // Calculate final metrics
+        this.calculateFinalMetrics(results);
+        
+        return results;
+      }
+      
+      // Execute strategy for a single asset
+      executeAssetStrategy(assetKey, strategyType, params, fee, results) {
+        const assetData = this.marketData.assets[assetKey];
+        const prices = assetData.prices;
+        const assetResults = {
+          trades: [],
+          totalTrades: 0,
+          profitableTrades: 0,
+          totalFees: 0
+        };
+        
+        let position = 0;
+        let entryPrice = 0;
+        let entryIndex = 0;
+        
+        for (let i = Math.max(params.fastMA || params.period || 20, 20); i < prices.length; i++) {
+          const currentPrice = prices[i];
+          const signal = this.generateSignal(strategyType, params, prices, i);
+          
+          // Execute signal
+          if (signal === 1 && position <= 0) { // Buy signal
+            if (position < 0) { // Close short position
+              const pnl = (entryPrice - currentPrice) * Math.abs(position);
+              const tradeFee = Math.abs(position) * currentPrice * fee;
+              
+              assetResults.trades.push({
+                type: 'close_short',
+                asset: assetKey,
+                price: currentPrice,
+                quantity: Math.abs(position),
+                pnl: pnl,
+                fee: tradeFee,
+                timestamp: this.marketData.timestamps[i],
+                index: i
+              });
+              
+              results.currentCapital += pnl - tradeFee;
+              results.totalFees += tradeFee;
+              assetResults.totalFees += tradeFee;
+              
+              if (pnl > 0) {
+                results.profitableTrades++;
+                assetResults.profitableTrades++;
+              }
+              assetResults.totalTrades++;
+            }
+            
+            // Open long position
+            const maxQuantity = Math.floor(results.currentCapital * 0.95 / currentPrice);
+            if (maxQuantity > 0) {
+              position = maxQuantity;
+              entryPrice = currentPrice;
+              entryIndex = i;
+              
+              const tradeFee = position * currentPrice * fee;
+              results.currentCapital -= tradeFee;
+              results.totalFees += tradeFee;
+              assetResults.totalFees += tradeFee;
+              
+              assetResults.trades.push({
+                type: 'open_long',
+                asset: assetKey,
+                price: currentPrice,
+                quantity: position,
+                fee: tradeFee,
+                timestamp: this.marketData.timestamps[i],
+                index: i
+              });
+            }
+            
+          } else if (signal === -1 && position >= 0) { // Sell signal
+            if (position > 0) { // Close long position
+              const pnl = (currentPrice - entryPrice) * position;
+              const tradeFee = position * currentPrice * fee;
+              
+              assetResults.trades.push({
+                type: 'close_long',
+                asset: assetKey,
+                price: currentPrice,
+                quantity: position,
+                pnl: pnl,
+                fee: tradeFee,
+                timestamp: this.marketData.timestamps[i],
+                index: i
+              });
+              
+              results.currentCapital += pnl - tradeFee;
+              results.totalFees += tradeFee;
+              assetResults.totalFees += tradeFee;
+              
+              if (pnl > 0) {
+                results.profitableTrades++;
+                assetResults.profitableTrades++;
+              }
+              assetResults.totalTrades++;
+              
+              position = 0;
+            }
+            
+            // Open short position (if we had margin trading)
+            // For simplicity, we'll just track the signal
+          }
+          
+          // Update equity curve
+          let currentEquity = results.currentCapital;
+          if (position !== 0) {
+            const unrealizedPnL = position > 0 ? 
+              (currentPrice - entryPrice) * position : 
+              (entryPrice - currentPrice) * Math.abs(position);
+            currentEquity += unrealizedPnL;
+          }
+          
+          results.equity.push(currentEquity);
+          
+          // Update max drawdown
+          if (currentEquity > results.peakCapital) {
+            results.peakCapital = currentEquity;
+          }
+          const drawdown = (results.peakCapital - currentEquity) / results.peakCapital;
+          if (drawdown > results.maxDrawdown) {
+            results.maxDrawdown = drawdown;
+          }
+        }
+        
+        // Close any remaining positions at the end
+        if (position !== 0) {
+          const finalPrice = prices[prices.length - 1];
+          const pnl = position > 0 ? 
+            (finalPrice - entryPrice) * position : 
+            (entryPrice - finalPrice) * Math.abs(position);
+          const tradeFee = Math.abs(position) * finalPrice * fee;
+          
+          assetResults.trades.push({
+            type: position > 0 ? 'close_long' : 'close_short',
+            asset: assetKey,
+            price: finalPrice,
+            quantity: Math.abs(position),
+            pnl: pnl,
+            fee: tradeFee,
+            timestamp: this.marketData.timestamps[prices.length - 1],
+            index: prices.length - 1
+          });
+          
+          results.currentCapital += pnl - tradeFee;
+          results.totalFees += tradeFee;
+          assetResults.totalFees += tradeFee;
+          
+          if (pnl > 0) {
+            results.profitableTrades++;
+            assetResults.profitableTrades++;
+          }
+          assetResults.totalTrades++;
+        }
+        
+        return assetResults;
+      }
+      
+      // Generate trading signal based on strategy
+      generateSignal(strategyType, params, prices, index) {
+        if (strategyType === 'ma') {
+          return this.generateMASignal(params, prices, index);
+        } else if (strategyType === 'rsi') {
+          return this.generateRSISignal(params, prices, index);
+        }
+        return 0; // No signal
+      }
+      
+      // Generate Moving Average signal
+      generateMASignal(params, prices, index) {
+        const fastMA = this.calculateSMA(prices, params.fastMA, index);
+        const slowMA = this.calculateSMA(prices, params.slowMA, index);
+        
+        if (fastMA > slowMA) {
+          return 1; // Buy signal
+        } else if (fastMA < slowMA) {
+          return -1; // Sell signal
+        }
+        return 0; // No signal
+      }
+      
+      // Generate RSI signal
+      generateRSISignal(params, prices, index) {
+        const rsi = this.calculateRSI(prices, params.period, index);
+        
+        if (rsi < params.oversold) {
+          return 1; // Buy signal (oversold)
+        } else if (rsi > params.overbought) {
+          return -1; // Sell signal (overbought)
+        }
+        return 0; // No signal
+      }
+      
+      // Calculate Simple Moving Average
+      calculateSMA(prices, period, index) {
+        if (index < period - 1) return 0;
+        
+        let sum = 0;
+        for (let i = 0; i < period; i++) {
+          sum += prices[index - i];
+        }
+        return sum / period;
+      }
+      
+      // Calculate RSI
+      calculateRSI(prices, period, index) {
+        if (index < period) return 50;
+        
+        let gains = 0;
+        let losses = 0;
+        
+        for (let i = 1; i <= period; i++) {
+          const change = prices[index - i + 1] - prices[index - i];
+          if (change > 0) {
+            gains += change;
+          } else {
+            losses -= change;
+          }
+        }
+        
+        const avgGain = gains / period;
+        const avgLoss = losses / period;
+        
+        if (avgLoss === 0) return 100;
+        
+        const rs = avgGain / avgLoss;
+        return 100 - (100 / (1 + rs));
+      }
+      
+      // Calculate final performance metrics
+      calculateFinalMetrics(results) {
+        const initialCapital = results.equity[0];
+        const finalCapital = results.equity[results.equity.length - 1];
+        
+        results.totalReturn = ((finalCapital - initialCapital) / initialCapital) * 100;
+        results.totalReturnAbs = finalCapital - initialCapital;
+        results.winRate = results.totalTrades > 0 ? (results.profitableTrades / results.totalTrades) * 100 : 0;
+        results.profitFactor = results.totalTrades > 0 ? 
+          results.profitableTrades / (results.totalTrades - results.profitableTrades) : 0;
+        
+        // Calculate Sharpe ratio (simplified)
+        const returns = [];
+        for (let i = 1; i < results.equity.length; i++) {
+          returns.push((results.equity[i] - results.equity[i-1]) / results.equity[i-1]);
+        }
+        
+        const avgReturn = returns.reduce((a, b) => a + b, 0) / returns.length;
+        const variance = returns.reduce((a, b) => a + Math.pow(b - avgReturn, 2), 0) / returns.length;
+        const stdDev = Math.sqrt(variance);
+        
+        results.sharpeRatio = stdDev > 0 ? avgReturn / stdDev : 0;
+        results.volatility = stdDev * Math.sqrt(252) * 100; // Annualized
+      }
+      
+      // Display backtest results
+      displayBacktestResults(results) {
+        // Update KPI displays
+        document.getElementById('kpiTrades').textContent = results.totalTrades;
+        document.getElementById('kpiRet').textContent = results.totalReturn.toFixed(2) + '%';
+        document.getElementById('kpiDD').textContent = (results.maxDrawdown * 100).toFixed(2) + '%';
+        document.getElementById('kpiSharpe').textContent = results.sharpeRatio.toFixed(2);
+        
+        // Render equity chart
+        this.renderEquityChart(results);
+        
+        // Render trade analysis
+        this.renderTradeAnalysis(results);
+      }
+      
+      // Render equity curve chart
+      renderEquityChart(results) {
+        const canvas = document.getElementById('chartEquity');
+        if (!canvas || !results) return;
+        
+        const ctx = canvas.getContext('2d');
+        const width = canvas.width;
+        const height = canvas.height;
+        
+        ctx.clearRect(0, 0, width, height);
+        
+        const equity = results.equity;
+        const minEquity = Math.min(...equity);
+        const maxEquity = Math.max(...equity);
+        
+        ctx.strokeStyle = '#66e0a3';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        
+        equity.forEach((value, i) => {
+          const x = (i / (equity.length - 1)) * (width - 40) + 20;
+          const y = height - 20 - ((value - minEquity) / (maxEquity - minEquity)) * (height - 40);
+          
+          if (i === 0) {
+            ctx.moveTo(x, y);
+          } else {
+            ctx.lineTo(x, y);
+          }
+        });
+        
+        ctx.stroke();
+      }
+      
+      // Render trade analysis
+      renderTradeAnalysis(results) {
+        const container = document.getElementById('tradeAnalysis');
+        if (!container || !results) return;
+        
+        container.innerHTML = '';
+        
+        if (results.totalTrades === 0) {
+          container.innerHTML = '<p>No trades executed</p>';
+          return;
+        }
+        
+        // Trade summary
+        const summary = document.createElement('div');
+        summary.className = 'trade-summary';
+        
+        summary.innerHTML = `
+          <h4>Trade Summary</h4>
+          <p>Total Trades: ${results.totalTrades}</p>
+          <p>Profitable: ${results.profitableTrades}</p>
+          <p>Win Rate: ${results.winRate.toFixed(1)}%</p>
+          <p>Total Fees: $${results.totalFees.toFixed(2)}</p>
+          <p>Total Return: ${results.totalReturn.toFixed(2)}%</p>
+          <p>Max Drawdown: ${(results.maxDrawdown * 100).toFixed(2)}%</p>
+          <p>Sharpe Ratio: ${results.sharpeRatio.toFixed(2)}</p>
+        `;
+        
+        container.appendChild(summary);
+        
+        // Recent trades table
+        const table = document.createElement('table');
+        table.className = 'trades-table';
+        
+        const headerRow = document.createElement('tr');
+        ['Date', 'Asset', 'Type', 'Price', 'Quantity', 'PnL', 'Fee'].forEach(header => {
+          headerRow.appendChild(document.createElement('th')).textContent = header;
+        });
+        table.appendChild(headerRow);
+        
+        // Show last 10 trades
+        const recentTrades = results.trades.slice(-10).reverse();
+        recentTrades.forEach(trade => {
+          const row = document.createElement('tr');
+          
+          const date = new Date(trade.timestamp);
+          row.appendChild(document.createElement('td')).textContent = date.toLocaleDateString();
+          row.appendChild(document.createElement('td')).textContent = this.assets[trade.asset]?.symbol || trade.asset;
+          row.appendChild(document.createElement('td')).textContent = trade.type.replace('_', ' ').toUpperCase();
+          row.appendChild(document.createElement('td')).textContent = '$' + trade.price.toFixed(2);
+          row.appendChild(document.createElement('td')).textContent = trade.quantity;
+          
+          const pnlCell = document.createElement('td');
+          if (trade.pnl !== undefined) {
+            pnlCell.textContent = '$' + trade.pnl.toFixed(2);
+            pnlCell.style.color = trade.pnl >= 0 ? '#66e0a3' : '#ff6b6b';
+          } else {
+            pnlCell.textContent = '—';
+          }
+          row.appendChild(pnlCell);
+          
+          row.appendChild(document.createElement('td')).textContent = '$' + trade.fee.toFixed(2);
+          table.appendChild(row);
+        });
+        
+        container.appendChild(table);
+      }
+      
+      // Reset strategy and results
+      resetStrategy() {
+        // Reset KPI displays
+        document.getElementById('kpiTrades').textContent = '0';
+        document.getElementById('kpiRet').textContent = '—';
+        document.getElementById('kpiDD').textContent = '—';
+        document.getElementById('kpiSharpe').textContent = '—';
+        
+        // Clear charts
+        const equityCanvas = document.getElementById('chartEquity');
+        if (equityCanvas) {
+          const ctx = equityCanvas.getContext('2d');
+          ctx.clearRect(0, 0, equityCanvas.width, equityCanvas.height);
+        }
+        
+        // Clear trade analysis
+        const tradeContainer = document.getElementById('tradeAnalysis');
+        if (tradeContainer) {
+          tradeContainer.innerHTML = '';
+        }
+        
+        // Reset strategy parameters to defaults
+        const strategyType = document.getElementById('strategyType')?.value || 'ma';
+        if (strategyType === 'ma') {
+          document.getElementById('param_fastMA').value = '10';
+          document.getElementById('param_slowMA').value = '30';
+        } else if (strategyType === 'rsi') {
+          document.getElementById('param_period').value = '14';
+        }
       }
     }
     
