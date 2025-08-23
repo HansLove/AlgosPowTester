@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Test Trading App</title>
+</head>
+<body>
+  <h1>Testing Trading App</h1>
+  <button onclick="testApp()">Test App</button>
+  <div id="output"></div>
+
+  <script type="module">
+    import { TradingApp } from './scripts/app.js';
+    
+    window.testApp = function() {
+      try {
+        console.log('Testing TradingApp...');
+        const app = new TradingApp();
+        console.log('TradingApp created:', app);
+        document.getElementById('output').innerHTML = 'TradingApp created successfully!';
+      } catch (error) {
+        console.error('Error creating TradingApp:', error);
+        document.getElementById('output').innerHTML = 'Error: ' + error.message;
+      }
+    };
+  </script>
+</body>
+</html>

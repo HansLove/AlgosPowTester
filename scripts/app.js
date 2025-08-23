@@ -3,7 +3,7 @@ import { MarketGenerator } from './market.js';
 import { Backtester } from './backtester.js';
 import { StrategyReporter } from './reporting.js';
 import { ASSETS, DEFAULT_SETTINGS, STRATEGY_TEMPLATES } from './config.js';
-import { $, fmt, storage, dom } from './utils.js';
+import { $, fmt, storage, dom, string } from './utils.js';
 
 export class TradingApp {
   constructor() {
@@ -28,36 +28,111 @@ export class TradingApp {
 
   // Initialize the application
   init() {
+    console.log('Initializing TradingApp...');
+    console.log('Available assets:', ASSETS);
+    console.log('Strategy templates:', STRATEGY_TEMPLATES);
+    
     this.loadState();
+    console.log('State loaded:', this.state);
+    
     this.setupEventListeners();
+    console.log('Event listeners setup complete');
+    
     this.renderAssetSelector();
+    console.log('Asset selector rendered');
+    
     this.renderStrategySelector();
+    console.log('Strategy selector rendered');
+    
     this.generateInitialMarket();
+    console.log('Initial market generation started');
   }
 
   // Setup event listeners
   setupEventListeners() {
+    console.log('Setting up event listeners...');
+    
     // Asset selection
-    $('#btnAddAsset')?.addEventListener('click', () => this.addAsset());
-    $('#btnRemoveAsset')?.addEventListener('click', () => this.removeAsset());
+    const btnAddAsset = $('#btnAddAsset');
+    const btnRemoveAsset = $('#btnRemoveAsset');
+    
+    if (btnAddAsset) {
+      btnAddAsset.addEventListener('click', () => this.addAsset());
+      console.log('Add asset button listener added');
+    } else {
+      console.warn('Add asset button not found');
+    }
+    
+    if (btnRemoveAsset) {
+      btnRemoveAsset.addEventListener('click', () => this.removeAsset());
+      console.log('Remove asset button listener added');
+    } else {
+      console.warn('Remove asset button not found');
+    }
     
     // Market generation
-    $('#btnGenerate')?.addEventListener('click', () => this.generateMarket());
+    const btnGenerate = $('#btnGenerate');
+    if (btnGenerate) {
+      btnGenerate.addEventListener('click', () => this.generateMarket());
+      console.log('Generate market button listener added');
+    } else {
+      console.warn('Generate market button not found');
+    }
     
     // Strategy selection
-    $('#strategy')?.addEventListener('change', (e) => this.onStrategyChange(e.target.value));
+    const strategySelect = $('#strategyType');
+    if (strategySelect) {
+      strategySelect.addEventListener('change', (e) => this.onStrategyChange(e.target.value));
+      console.log('Strategy selector listener added');
+    } else {
+      console.warn('Strategy selector not found');
+    }
     
     // Backtesting
-    $('#btnBacktest')?.addEventListener('click', () => this.runBacktest());
-    $('#btnResetStrat')?.addEventListener('click', () => this.resetStrategy());
+    const btnBacktest = $('#btnBacktest');
+    if (btnBacktest) {
+      btnBacktest.addEventListener('click', () => this.runBacktest());
+      console.log('Backtest button listener added');
+    } else {
+      console.warn('Backtest button not found');
+    }
+    
+    const btnResetStrat = $('#btnResetStrat');
+    if (btnResetStrat) {
+      btnResetStrat.addEventListener('click', () => this.resetStrategy());
+      console.log('Reset strategy button listener added');
+    } else {
+      console.warn('Reset strategy button not found');
+    }
     
     // Report actions
-    $('#btnExportReport')?.addEventListener('click', () => this.exportReport());
-    $('#btnSaveStrategy')?.addEventListener('click', () => this.saveStrategy());
-    $('#btnLoadStrategy')?.addEventListener('click', () => this.loadStrategy());
+    const btnExportReport = $('#btnExportReport');
+    if (btnExportReport) {
+      btnExportReport.addEventListener('click', () => this.exportReport());
+      console.log('Export report button listener added');
+    } else {
+      console.warn('Export report button not found');
+    }
+    
+    const btnSaveStrategy = $('#btnSaveStrategy');
+    if (btnSaveStrategy) {
+      btnSaveStrategy.addEventListener('click', () => this.saveStrategy());
+      console.log('Save strategy button listener added');
+    } else {
+      console.warn('Save strategy button not found');
+    }
+    
+    const btnLoadStrategy = $('#btnLoadStrategy');
+    if (btnLoadStrategy) {
+      btnLoadStrategy.addEventListener('click', () => this.loadStrategy());
+      console.log('Load strategy button listener added');
+    } else {
+      console.warn('Load strategy button not found');
+    }
     
     // Settings changes
     this.setupSettingsListeners();
+    console.log('Event listeners setup complete');
   }
 
   // Setup settings change listeners
@@ -79,14 +154,21 @@ export class TradingApp {
 
   // Render asset selector
   renderAssetSelector() {
+    console.log('Rendering asset selector...');
     const container = $('#assetSelector');
-    if (!container) return;
+    if (!container) {
+      console.error('Asset selector container not found');
+      return;
+    }
     
     container.innerHTML = '';
+    console.log('Container cleared, rendering assets...');
     
     // Add asset selection checkboxes
     Object.entries(ASSETS).forEach(([key, asset]) => {
+      console.log('Creating asset option for:', key, asset);
       const isSelected = this.state.selectedAssets.includes(key);
+      
       const checkbox = dom.create('input', {
         type: 'checkbox',
         id: `asset_${key}`,
@@ -111,6 +193,7 @@ export class TradingApp {
       });
       
       container.appendChild(div);
+      console.log('Asset option added for:', key);
     });
     
     // Add asset count display
@@ -119,6 +202,8 @@ export class TradingApp {
       textContent: `${this.state.selectedAssets.length} asset(s) selected`
     });
     container.appendChild(countDiv);
+    
+    console.log('Asset selector rendering complete');
   }
 
   // Render strategy selector
@@ -236,11 +321,15 @@ export class TradingApp {
 
   // Add asset to selection
   addAsset(assetKey = null) {
+    console.log('Adding asset:', assetKey);
+    
     if (!assetKey) {
       // Show asset picker
       const availableAssets = Object.keys(ASSETS).filter(key => 
         !this.state.selectedAssets.includes(key)
       );
+      
+      console.log('Available assets:', availableAssets);
       
       if (availableAssets.length === 0) {
         alert('All assets are already selected');
@@ -252,6 +341,7 @@ export class TradingApp {
     
     if (!this.state.selectedAssets.includes(assetKey)) {
       this.state.selectedAssets.push(assetKey);
+      console.log('Updated selected assets:', this.state.selectedAssets);
       this.saveState();
       this.renderAssetSelector();
     }
@@ -259,6 +349,8 @@ export class TradingApp {
 
   // Remove asset from selection
   removeAsset(assetKey = null) {
+    console.log('Removing asset:', assetKey);
+    
     if (!assetKey) {
       if (this.state.selectedAssets.length > 1) {
         assetKey = this.state.selectedAssets[this.state.selectedAssets.length - 1];
@@ -271,6 +363,7 @@ export class TradingApp {
     const index = this.state.selectedAssets.indexOf(assetKey);
     if (index > -1) {
       this.state.selectedAssets.splice(index, 1);
+      console.log('Updated selected assets:', this.state.selectedAssets);
       this.saveState();
       this.renderAssetSelector();
     }
@@ -278,6 +371,8 @@ export class TradingApp {
 
   // Generate market data
   async generateMarket() {
+    console.log('Generating market for assets:', this.state.selectedAssets);
+    
     try {
       const settings = {
         candles: parseInt($('#candles')?.value || this.state.settings.candles),
@@ -285,10 +380,14 @@ export class TradingApp {
         correlationMatrix: null // Will be auto-generated
       };
       
+      console.log('Market settings:', settings);
+      
       this.currentMarketData = this.marketGenerator.generateMultiAssetMarket(
         this.state.selectedAssets,
         settings
       );
+      
+      console.log('Market data generated:', this.currentMarketData);
       
       this.updateMarketDisplay();
       this.saveState();
@@ -299,7 +398,7 @@ export class TradingApp {
       
     } catch (error) {
       console.error('Error generating market:', error);
-      alert('Error generating market data');
+      alert('Error generating market data: ' + error.message);
     }
   }
 
@@ -312,6 +411,22 @@ export class TradingApp {
     
     $('#kpiCandles')?.textContent = fmt.number(this.currentMarketData.timestamps.length);
     $('#kpiAssets')?.textContent = Object.keys(this.currentMarketData.assets).length;
+    
+    // Update correlation and volatility KPIs
+    if (this.currentMarketData.assets && Object.keys(this.currentMarketData.assets).length > 1) {
+      const correlations = Object.values(this.currentMarketData.correlationMatrix)
+        .flat()
+        .filter(c => c !== 1); // Exclude self-correlations
+      const avgCorrelation = correlations.reduce((a, b) => a + b, 0) / correlations.length;
+      $('#kpiCorrelation')?.textContent = fmt.percentage(avgCorrelation * 100, 1);
+    }
+    
+    // Calculate average volatility
+    if (stats) {
+      const volatilities = Object.values(stats).map(s => s.volatility);
+      const avgVolatility = volatilities.reduce((a, b) => a + b, 0) / volatilities.length;
+      $('#kpiVolatility')?.textContent = fmt.percentage(avgVolatility, 1);
+    }
     
     // Update charts
     this.renderMarketCharts();

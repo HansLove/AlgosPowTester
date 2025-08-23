@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Simple Module Test</title>
+</head>
+<body>
+  <h1>Testing Module Loading</h1>
+  <button onclick="testConfig()">Test Config</button>
+  <button onclick="testUtils()">Test Utils</button>
+  <button onclick="testMarket()">Test Market</button>
+  <button onclick="testApp()">Test Full App</button>
+  <div id="output"></div>
+
+  <script type="module">
+    // Test individual modules
+    window.testConfig = async function() {
+      try {
+        console.log('Testing config module...');
+        const config = await import('./scripts/config.js');
+        console.log('Config loaded:', config);
+        document.getElementById('output').innerHTML = 'Config: OK - ' + Object.keys(config.ASSETS).length + ' assets';
+      } catch (error) {
+        console.error('Config error:', error);
+        document.getElementById('output').innerHTML = 'Config: ERROR - ' + error.message;
+      }
+    };
+    
+    window.testUtils = async function() {
+      try {
+        console.log('Testing utils module...');
+        const utils = await import('./scripts/utils.js');
+        console.log('Utils loaded:', utils);
+        document.getElementById('output').innerHTML = 'Utils: OK - ' + Object.keys(utils).length + ' exports';
+      } catch (error) {
+        console.error('Utils error:', error);
+        document.getElementById('output').innerHTML = 'Utils: ERROR - ' + error.message;
+      }
+    };
+    
+    window.testMarket = async function() {
+      try {
+        console.log('Testing market module...');
+        const market = await import('./scripts/market.js');
+        console.log('Market loaded:', market);
+        document.getElementById('output').innerHTML = 'Market: OK - MarketGenerator class found';
+      } catch (error) {
+        console.error('Market error:', error);
+        document.getElementById('output').innerHTML = 'Market: ERROR - ' + error.message;
+      }
+    };
+    
+    window.testApp = async function() {
+      try {
+        console.log('Testing full app...');
+        const app = await import('./scripts/app.js');
+        console.log('App loaded:', app);
+        if (app.TradingApp) {
+          const instance = new app.TradingApp();
+          document.getElementById('output').innerHTML = 'App: OK - TradingApp created';
+        } else {
+          document.getElementById('output').innerHTML = 'App: ERROR - TradingApp class not found';
+        }
+      } catch (error) {
+        console.error('App error:', error);
+        document.getElementById('output').innerHTML = 'App: ERROR - ' + error.message;
+      }
+    };
+  </script>
+</body>
+</html>

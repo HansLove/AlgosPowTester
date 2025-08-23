@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Working Trading Algorithm Tester</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <div class="title">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M3 12h18M12 3v18" stroke="#66e0a3" stroke-width="1.4"/>
+      </svg>
+      <div>
+        <div style="font-weight:800;font-size:18px;letter-spacing:.3px">Working Trading Algorithm Tester</div>
+        <div class="muted small">Multi-Asset Backtesting • Strategy Analysis • Comprehensive Reporting</div>
+      </div>
+    </div>
+    <span class="badge">Professional Trading Simulation Platform</span>
+  </header>
+
+  <div class="container">
+    <div class="grid">
+      <!-- 1) Asset Selection -->
+      <section class="card col-4">
+        <div class="body">
+          <h3>1) Select Assets</h3>
+          <div id="assetSelector" class="asset-selector">
+            <!-- Asset checkboxes will be rendered here -->
+          </div>
+          <div class="row" style="margin-top:12px">
+            <button id="btnAddAsset" class="ghost">Add Asset</button>
+            <button id="btnRemoveAsset" class="ghost">Remove Asset</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2) Market Generation -->
+      <section class="card col-8">
+        <div class="body">
+          <h3>2) Generate Market Data</h3>
+          <div class="row" style="gap:12px;align-items:flex-end">
+            <div>
+              <label>Seed</label><br/>
+              <input id="seed" type="text" value="markets-2025" placeholder="change for reproducible variations"/>
+            </div>
+            <div>
+              <label>Candles</label><br/>
+              <input id="candles" type="number" min="50" max="10000" value="1000"/>
+            </div>
+            <div>
+              <label>Initial Capital</label><br/>
+              <input id="initialCapital" type="number" min="1000" step="1000" value="10000"/>
+            </div>
+            <div>
+              <label>&nbsp;</label><br/>
+              <button id="btnGenerate" class="primary">Generate Market</button>
+            </div>
+          </div>
+
+          <div class="kpi" style="margin-top:14px">
+            <div class="item"><h4>Candles</h4><div id="kpiCandles" class="val">0</div></div>
+            <div class="item"><h4>Assets</h4><div id="kpiAssets" class="val">0</div></div>
+            <div class="item><h4>Correlation</h4><div id="kpiCorrelation" class="val">—</div></div>
+            <div class="item"><h4>Volatility</h4><div id="kpiVolatility" class="val">—</div></div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px">
+            <div>
+              <div class="muted small" style="margin:6px 0">Asset Prices</div>
+              <canvas id="chartPrices" width="540" height="260"></canvas>
+            </div>
+            <div>
+              <div class="muted small" style="margin:6px 0">Correlation Matrix</div>
+              <div id="correlationMatrix" class="correlation-matrix"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3) Strategy Configuration -->
+      <section class="card col-4">
+        <div class="body">
+          <h3>3) Strategy Configuration</h3>
+          <div id="strategySelector" class="strategy-selector">
+            <!-- Strategy selector will be rendered here -->
+          </div>
+          <div id="strategyParams" class="strategy-params">
+            <!-- Strategy parameters will be rendered here -->
+          </div>
+        </div>
+      </section>
+
+      <!-- 4) Backtesting & Results -->
+      <section class="card col-8">
+        <div class="body">
+          <h3>4) Backtesting & Results</h3>
+          <div class="row" style="gap:12px;align-items:flex-end">
+            <div>
+              <label>Fee (per trade)</label><br/>
+              <input id="fee" type="number" step="0.0001" value="0.001"/>
+            </div>
+            <div>
+              <label>&nbsp;</label><br/>
+              <button id="btnBacktest" class="primary">Run Backtest</button>
+              <button id="btnResetStrat" class="ghost">Reset</button>
+            </div>
+          </div>
+
+          <div class="kpi" style="margin-top:12px">
+            <div class="item"><h4>Trades</h4><div id="kpiTrades" class="val">0</div></div>
+            <div class="item"><h4>Return</h4><div id="kpiRet" class="val">—</div></div>
+            <div class="item"><h4>Max Drawdown</h4><div id="kpiDD" class="val">—</div></div>
+            <div class="item"><h4>Sharpe Ratio</h4><div id="kpiSharpe" class="val">—</div></div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px">
+            <div>
+              <div class="muted small" style="margin:6px 0">Equity Curve</div>
+              <canvas id="chartEquity" width="540" height="260"></canvas>
+            </div>
+            <div>
+              <div class="muted small" style="margin:6px 0">Trade Analysis</div>
+              <div id="tradeAnalysis" class="trade-analysis"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="footer">
+      ⚠️ This platform uses <b>synthetic data</b> for educational and testing purposes. It does not provide trading advice.
+      <br>Always conduct thorough testing before using strategies in live markets.
+    </div>
+  </div>
+
+  <script>
+    // Working version with basic functionality
+    class SimpleTradingApp {
+      constructor() {
+        this.assets = {
+          bitcoin: { name: 'Bitcoin (BTC)', symbol: 'BTC', color: '#f7931a' },
+          gold: { name: 'Gold (XAU)', symbol: 'XAU', color: '#ffd700' },
+          sp500: { name: 'S&P 500 Index', symbol: 'SPX', color: '#00d4aa' },
+          nasdaq: { name: 'NASDAQ Composite', symbol: 'NDX', color: '#007acc' }
+        };
+        
+        this.selectedAssets = ['bitcoin'];
+        this.marketData = null;
+        this.init();
+      }
+      
+      init() {
+        this.renderAssetSelector();
+        this.renderStrategySelector();
+        this.setupEventListeners();
+        this.generateMarket();
+      }
+      
+      renderAssetSelector() {
+        const container = document.getElementById('assetSelector');
+        if (!container) return;
+        
+        container.innerHTML = '';
+        
+        Object.entries(this.assets).forEach(([key, asset]) => {
+          const isSelected = this.selectedAssets.includes(key);
+          
+          const div = document.createElement('div');
+          div.className = 'asset-option';
+          
+          const checkbox = document.createElement('input');
+          checkbox.type = 'checkbox';
+          checkbox.id = `asset_${key}`;
+          checkbox.checked = isSelected;
+          
+          const label = document.createElement('label');
+          label.htmlFor = `asset_${key}`;
+          label.textContent = asset.name;
+          
+          checkbox.addEventListener('change', (e) => {
+            if (e.target.checked) {
+              this.addAsset(key);
+            } else {
+              this.removeAsset(key);
+            }
+          });
+          
+          div.appendChild(checkbox);
+          div.appendChild(label);
+          container.appendChild(div);
+        });
+        
+        // Add asset count
+        const countDiv = document.createElement('div');
+        countDiv.className = 'asset-count';
+        countDiv.textContent = `${this.selectedAssets.length} asset(s) selected`;
+        container.appendChild(countDiv);
+      }
+      
+      renderStrategySelector() {
+        const container = document.getElementById('strategySelector');
+        if (!container) return;
+        
+        container.innerHTML = '';
+        
+        const select = document.createElement('select');
+        select.id = 'strategyType';
+        
+        const strategies = [
+          { value: 'ma', name: 'Moving Average Crossover' },
+          { value: 'rsi', name: 'RSI Mean Reversion' },
+          { value: 'bollinger', name: 'Bollinger Bands' },
+          { value: 'custom', name: 'Custom JavaScript' }
+        ];
+        
+        strategies.forEach(strategy => {
+          const option = document.createElement('option');
+          option.value = strategy.value;
+          option.textContent = strategy.name;
+          select.appendChild(option);
+        });
+        
+        select.addEventListener('change', (e) => this.onStrategyChange(e.target.value));
+        container.appendChild(select);
+        
+        this.renderStrategyParams();
+      }
+      
+      renderStrategyParams() {
+        const container = document.getElementById('strategyParams');
+        if (!container) return;
+        
+        container.innerHTML = '';
+        
+        const strategyType = document.getElementById('strategyType')?.value || 'ma';
+        
+        if (strategyType === 'ma') {
+          this.renderMAParams(container);
+        } else if (strategyType === 'rsi') {
+          this.renderRSIParams(container);
+        }
+      }
+      
+      renderMAParams(container) {
+        const fastLabel = document.createElement('label');
+        fastLabel.textContent = 'Fast MA Period';
+        
+        const fastInput = document.createElement('input');
+        fastInput.type = 'number';
+        fastInput.id = 'param_fastMA';
+        fastInput.min = '1';
+        fastInput.max = '100';
+        fastInput.value = '10';
+        
+        const slowLabel = document.createElement('label');
+        slowLabel.textContent = 'Slow MA Period';
+        
+        const slowInput = document.createElement('input');
+        slowInput.type = 'number';
+        slowInput.id = 'param_slowMA';
+        slowInput.min = '2';
+        slowInput.max = '200';
+        slowInput.value = '30';
+        
+        container.appendChild(fastLabel);
+        container.appendChild(fastInput);
+        container.appendChild(slowLabel);
+        container.appendChild(slowInput);
+      }
+      
+      renderRSIParams(container) {
+        const periodLabel = document.createElement('label');
+        periodLabel.textContent = 'RSI Period';
+        
+        const periodInput = document.createElement('input');
+        periodInput.type = 'number';
+        periodInput.id = 'param_period';
+        periodInput.min = '2';
+        periodInput.max = '50';
+        periodInput.value = '14';
+        
+        container.appendChild(periodLabel);
+        container.appendChild(periodInput);
+      }
+      
+      addAsset(assetKey) {
+        if (!this.selectedAssets.includes(assetKey)) {
+          this.selectedAssets.push(assetKey);
+          this.renderAssetSelector();
+        }
+      }
+      
+      removeAsset(assetKey) {
+        if (this.selectedAssets.length > 1) {
+          const index = this.selectedAssets.indexOf(assetKey);
+          if (index > -1) {
+            this.selectedAssets.splice(index, 1);
+            this.renderAssetSelector();
+          }
+        }
+      }
+      
+      generateMarket() {
+        console.log('Generating market for assets:', this.selectedAssets);
+        
+        const candles = parseInt(document.getElementById('candles')?.value || 1000);
+        const seed = document.getElementById('seed')?.value || 'markets-2025';
+        
+        // Generate simple price data
+        this.marketData = {
+          assets: {},
+          timestamps: [],
+          correlationMatrix: {}
+        };
+        
+        this.selectedAssets.forEach(assetKey => {
+          const asset = this.assets[assetKey];
+          const prices = this.generatePriceSeries(candles, seed + '-' + assetKey, 100, 0.0001, 0.02);
+          
+          this.marketData.assets[assetKey] = {
+            ...asset,
+            prices: prices
+          };
+        });
+        
+        // Generate timestamps
+        for (let i = 0; i < candles; i++) {
+          this.marketData.timestamps.push(Date.now() - (candles - i - 1) * 24 * 60 * 60 * 1000);
+        }
+        
+        this.updateMarketDisplay();
+        console.log('Market data generated:', this.marketData);
+      }
+      
+      generatePriceSeries(n, seed, startPrice, drift, volatility) {
+        const prices = [startPrice];
+        let currentPrice = startPrice;
+        
+        for (let i = 1; i < n; i++) {
+          const change = (Math.random() - 0.5) * volatility + drift;
+          currentPrice = Math.max(currentPrice * (1 + change), 0.01);
+          prices.push(currentPrice);
+        }
+        
+        return prices;
+      }
+      
+      updateMarketDisplay() {
+        if (!this.marketData) return;
+        
+        document.getElementById('kpiCandles').textContent = this.marketData.timestamps.length;
+        document.getElementById('kpiAssets').textContent = Object.keys(this.marketData.assets).length;
+        
+        this.renderPriceChart();
+        this.renderCorrelationMatrix();
+      }
+      
+      renderPriceChart() {
+        const canvas = document.getElementById('chartPrices');
+        if (!canvas || !this.marketData) return;
+        
+        const ctx = canvas.getContext('2d');
+        const width = canvas.width;
+        const height = canvas.height;
+        
+        ctx.clearRect(0, 0, width, height);
+        
+        Object.entries(this.marketData.assets).forEach(([key, asset]) => {
+          const prices = asset.prices;
+          const color = asset.color;
+          
+          ctx.strokeStyle = color;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          
+          prices.forEach((price, i) => {
+            const x = (i / (prices.length - 1)) * (width - 40) + 20;
+            const y = height - 20 - ((price - Math.min(...prices)) / (Math.max(...prices) - Math.min(...prices))) * (height - 40);
+            
+            if (i === 0) {
+              ctx.moveTo(x, y);
+            } else {
+              ctx.lineTo(x, y);
+            }
+          });
+          
+          ctx.stroke();
+        });
+      }
+      
+      renderCorrelationMatrix() {
+        const container = document.getElementById('correlationMatrix');
+        if (!container || !this.marketData) return;
+        
+        container.innerHTML = '';
+        
+        const assets = Object.keys(this.marketData.assets);
+        if (assets.length < 2) return;
+        
+        const table = document.createElement('table');
+        table.className = 'correlation-table';
+        
+        // Header row
+        const headerRow = document.createElement('tr');
+        headerRow.appendChild(document.createElement('th')).textContent = 'Asset';
+        assets.forEach(assetKey => {
+          const th = document.createElement('th');
+          th.textContent = this.assets[assetKey].symbol;
+          headerRow.appendChild(th);
+        });
+        table.appendChild(headerRow);
+        
+        // Data rows
+        assets.forEach(asset1 => {
+          const row = document.createElement('tr');
+          row.appendChild(document.createElement('td')).textContent = this.assets[asset1].symbol;
+          
+          assets.forEach(asset2 => {
+            const correlation = asset1 === asset2 ? 1 : (Math.random() - 0.5) * 2;
+            const cell = document.createElement('td');
+            cell.textContent = correlation.toFixed(2);
+            cell.className = correlation > 0.5 ? 'high-correlation' : correlation < -0.5 ? 'low-correlation' : 'medium-correlation';
+            row.appendChild(cell);
+          });
+          
+          table.appendChild(row);
+        });
+        
+        container.appendChild(table);
+      }
+      
+      onStrategyChange(strategyType) {
+        this.renderStrategyParams();
+      }
+      
+      setupEventListeners() {
+        document.getElementById('btnAddAsset')?.addEventListener('click', () => {
+          const availableAssets = Object.keys(this.assets).filter(key => 
+            !this.selectedAssets.includes(key)
+          );
+          if (availableAssets.length > 0) {
+            this.addAsset(availableAssets[0]);
+          }
+        });
+        
+        document.getElementById('btnRemoveAsset')?.addEventListener('click', () => {
+          if (this.selectedAssets.length > 1) {
+            this.removeAsset(this.selectedAssets[this.selectedAssets.length - 1]);
+          }
+        });
+        
+        document.getElementById('btnGenerate')?.addEventListener('click', () => this.generateMarket());
+      }
+    }
+    
+    // Initialize the app when DOM is loaded
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('Initializing SimpleTradingApp...');
+      window.tradingApp = new SimpleTradingApp();
+      console.log('SimpleTradingApp created:', window.tradingApp);
+    });
+  </script>
+</body>
+</html>

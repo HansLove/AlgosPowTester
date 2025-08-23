@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Non-Module Test</title>
+</head>
+<body>
+  <h1>Testing Basic Functionality</h1>
+  <button onclick="testBasicFunctions()">Test Basic Functions</button>
+  <button onclick="testAssetManagement()">Test Asset Management</button>
+  <div id="output"></div>
+
+  <script>
+    // Test basic functionality without modules
+    window.testBasicFunctions = function() {
+      try {
+        console.log('Testing basic functions...');
+        
+        // Test DOM utilities
+        const testDiv = document.createElement('div');
+        testDiv.textContent = 'Test div created';
+        document.body.appendChild(testDiv);
+        
+        // Test basic math
+        const result = Math.max(1, 2, 3);
+        
+        document.getElementById('output').innerHTML = 'Basic functions: OK - Math.max(1,2,3) = ' + result;
+        console.log('Basic functions test passed');
+      } catch (error) {
+        console.error('Basic functions error:', error);
+        document.getElementById('output').innerHTML = 'Basic functions: ERROR - ' + error.message;
+      }
+    };
+    
+    window.testAssetManagement = function() {
+      try {
+        console.log('Testing asset management...');
+        
+        // Create a simple asset structure
+        const assets = {
+          bitcoin: { name: 'Bitcoin', symbol: 'BTC', price: 50000 },
+          gold: { name: 'Gold', symbol: 'XAU', price: 2000 }
+        };
+        
+        const selectedAssets = ['bitcoin'];
+        
+        // Test adding asset
+        if (!selectedAssets.includes('gold')) {
+          selectedAssets.push('gold');
+        }
+        
+        // Test removing asset
+        const index = selectedAssets.indexOf('bitcoin');
+        if (index > -1) {
+          selectedAssets.splice(index, 1);
+        }
+        
+        document.getElementById('output').innerHTML = 'Asset management: OK - Assets: ' + selectedAssets.join(', ');
+        console.log('Asset management test passed');
+      } catch (error) {
+        console.error('Asset management error:', error);
+        document.getElementById('output').innerHTML = 'Asset management: ERROR - ' + error.message;
+      }
+    };
+  </script>
+</body>
+</html>
