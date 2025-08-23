@@ -646,3 +646,228 @@ canvas {
   background: rgba(122, 166, 255, 0.2);
   color: var(--accent2);
 }
+
+/* Chaos Engine Styles */
+.chaos-engine-header {
+  margin-bottom: 20px;
+  padding: 15px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 8px;
+  color: white;
+}
+
+.chaos-engine-header p {
+  margin: 0;
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.chaos-controls {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.chaos-btn {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+  border: none;
+  padding: 12px 24px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.chaos-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(255, 107, 107, 0.3);
+}
+
+.chaos-btn:disabled {
+  opacity: 0.7;
+  transform: none;
+  cursor: not-allowed;
+}
+
+/* Progress Bar */
+.chaos-progress {
+  margin-top: 20px;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 20px;
+  background: #e9ecef;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #66e0a3 0%, #4ecdc4 100%);
+  width: 0%;
+  transition: width 0.3s ease;
+  border-radius: 10px;
+}
+
+.progress-text {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  color: #666;
+}
+
+/* Chaos Results */
+.chaos-results {
+  background: #fff;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 20px;
+}
+
+.chaos-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.chaos-kpi {
+  text-align: center;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border-left: 4px solid #66e0a3;
+}
+
+.chaos-kpi h5 {
+  margin: 0 0 10px 0;
+  font-size: 12px;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.chaos-kpi .val {
+  font-size: 24px;
+  font-weight: 700;
+  color: #333;
+}
+
+/* Chaos Charts */
+.chaos-charts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.chart-container {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.chart-container h5 {
+  margin: 0 0 15px 0;
+  color: #333;
+  font-size: 16px;
+}
+
+/* Scenario Breakdown */
+.chaos-scenarios {
+  margin-bottom: 30px;
+}
+
+.chaos-scenarios h5 {
+  margin-bottom: 15px;
+  color: #333;
+  font-size: 18px;
+}
+
+.scenario-item {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  border-left: 4px solid #667eea;
+}
+
+.scenario-item h6 {
+  margin: 0 0 8px 0;
+  color: #333;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.scenario-item p {
+  margin: 0;
+  font-size: 13px;
+  color: #666;
+}
+
+/* Recommendations */
+.chaos-recommendations {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.chaos-recommendations h5 {
+  margin: 0 0 15px 0;
+  color: #333;
+  font-size: 18px;
+}
+
+.recommendation {
+  background: white;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  border-left: 4px solid #66e0a3;
+}
+
+.recommendation.high {
+  border-left-color: #ff6b6b;
+}
+
+.recommendation.medium {
+  border-left-color: #ffa726;
+}
+
+.recommendation.low {
+  border-left-color: #66e0a3;
+}
+
+.recommendation strong {
+  color: #333;
+  font-size: 14px;
+}
+
+.recommendation em {
+  color: #666;
+  font-size: 12px;
+  font-style: italic;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .chaos-controls .row {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .chaos-summary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .chaos-charts {
+    grid-template-columns: 1fr;
+  }
+  
+  .chaos-kpi .val {
+    font-size: 20px;
+  }
+}

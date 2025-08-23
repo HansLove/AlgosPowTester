@@ -127,6 +127,111 @@
           </div>
         </div>
       </section>
+
+      <!-- 5) Chaos Engine - Mass Strategy Testing -->
+      <section class="card col-12">
+        <div class="body">
+          <h3>5) 🌀 Chaos Engine - Mass Strategy Testing</h3>
+          <div class="chaos-engine-header">
+            <p class="muted">Test your strategies across millions of simulated markets with realistic market patterns, volatility regimes, and extreme scenarios.</p>
+          </div>
+          
+          <div class="chaos-controls">
+            <div class="row" style="gap:20px;align-items:flex-end;margin-bottom:20px">
+              <div>
+                <label>Test Iterations (Millions)</label><br/>
+                <input id="chaosIterations" type="number" min="0.001" max="100" step="0.001" value="0.1" placeholder="0.1 = 100,000 tests"/>
+              </div>
+              <div>
+                <label>Market Scenarios</label><br/>
+                <select id="chaosScenarios">
+                  <option value="normal">Normal Markets</option>
+                  <option value="volatile">High Volatility</option>
+                  <option value="crisis">Market Crisis</option>
+                  <option value="bubble">Bubble & Crash</option>
+                  <option value="trending">Strong Trends</option>
+                  <option value="sideways">Sideways Markets</option>
+                  <option value="mixed">Mixed Patterns</option>
+                </select>
+              </div>
+              <div>
+                <label>Stress Level</label><br/>
+                <select id="chaosStressLevel">
+                  <option value="low">Low (Conservative)</option>
+                  <option value="medium" selected>Medium (Balanced)</option>
+                  <option value="high">High (Aggressive)</option>
+                  <option value="extreme">Extreme (Maximum)</option>
+                </select>
+              </div>
+              <div>
+                <label>&nbsp;</label><br/>
+                <button id="btnChaosEngine" class="primary chaos-btn">🚀 Launch Chaos Engine</button>
+              </div>
+            </div>
+            
+            <div class="chaos-progress" style="display:none">
+              <div class="progress-bar">
+                <div class="progress-fill" id="chaosProgressFill"></div>
+              </div>
+              <div class="progress-text">
+                <span id="chaosProgressText">0% Complete</span>
+                <span id="chaosTestsCompleted">0 tests completed</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="chaos-results" style="display:none">
+            <h4>🎯 Chaos Engine Results</h4>
+            <div class="chaos-summary">
+              <div class="chaos-kpi">
+                <h5>Total Tests</h5>
+                <div id="chaosTotalTests" class="val">0</div>
+              </div>
+              <div class="chaos-kpi">
+                <h5>Success Rate</h5>
+                <div id="chaosSuccessRate" class="val">0%</div>
+              </div>
+              <div class="chaos-kpi">
+                <h5>Avg Return</h5>
+                <div id="chaosAvgReturn" class="val">0%</div>
+              </div>
+              <div class="chaos-kpi">
+                <h5>Max Drawdown</h5>
+                <div id="chaosMaxDD" class="val">0%</div>
+              </div>
+              <div class="chaos-kpi">
+                <h5>Sharpe Ratio</h5>
+                <div id="chaosSharpe" class="val">0</div>
+              </div>
+              <div class="chaos-kpi">
+                <h5>Survival Rate</h5>
+                <div id="chaosSurvivalRate" class="val">0%</div>
+              </div>
+            </div>
+            
+            <div class="chaos-charts">
+              <div class="chart-container">
+                <h5>Return Distribution</h5>
+                <canvas id="chaosReturnChart" width="400" height="200"></canvas>
+              </div>
+              <div class="chart-container">
+                <h5>Drawdown Distribution</h5>
+                <canvas id="chaosDrawdownChart" width="400" height="200"></canvas>
+              </div>
+            </div>
+            
+            <div class="chaos-scenarios">
+              <h5>📊 Scenario Performance Breakdown</h5>
+              <div id="chaosScenarioBreakdown"></div>
+            </div>
+            
+            <div class="chaos-recommendations">
+              <h5>💡 Strategy Recommendations</h5>
+              <div id="chaosRecommendations"></div>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
 
     <div class="footer">
@@ -456,6 +561,594 @@
         // Add backtesting event listeners
         document.getElementById('btnBacktest')?.addEventListener('click', () => this.runBacktest());
         document.getElementById('btnResetStrat')?.addEventListener('click', () => this.resetStrategy());
+        
+        // Add Chaos Engine event listener
+        document.getElementById('btnChaosEngine')?.addEventListener('click', () => this.launchChaosEngine());
+      }
+      
+      // 🌀 Chaos Engine - Mass Strategy Testing
+      async launchChaosEngine() {
+        if (!this.marketData) {
+          alert('Please generate market data first');
+          return;
+        }
+        
+        const iterations = parseFloat(document.getElementById('chaosIterations').value);
+        const scenario = document.getElementById('chaosScenarios').value;
+        const stressLevel = document.getElementById('chaosStressLevel').value;
+        
+        if (iterations <= 0) {
+          alert('Please enter a valid number of iterations');
+          return;
+        }
+        
+        const totalTests = Math.floor(iterations * 1000000); // Convert to actual number
+        console.log(`🚀 Launching Chaos Engine: ${totalTests.toLocaleString()} tests`);
+        
+        // Show progress
+        this.showChaosProgress();
+        
+        // Get current strategy configuration
+        const strategyType = document.getElementById('strategyType')?.value || 'ma';
+        const params = this.getStrategyParams(strategyType);
+        const fee = parseFloat(document.getElementById('fee')?.value || 0.001);
+        const initialCapital = parseFloat(document.getElementById('initialCapital')?.value || 10000);
+        
+        // Run chaos engine
+        const results = await this.runChaosEngine(totalTests, scenario, stressLevel, strategyType, params, fee, initialCapital);
+        
+        // Display results
+        this.displayChaosResults(results);
+        
+        console.log('🌀 Chaos Engine completed:', results);
+      }
+      
+      // Show chaos engine progress
+      showChaosProgress() {
+        document.querySelector('.chaos-progress').style.display = 'block';
+        document.querySelector('.chaos-results').style.display = 'none';
+        document.getElementById('btnChaosEngine').disabled = true;
+        document.getElementById('btnChaosEngine').textContent = '🔄 Running...';
+      }
+      
+      // Hide chaos engine progress
+      hideChaosProgress() {
+        document.querySelector('.chaos-progress').style.display = 'none';
+        document.getElementById('btnChaosEngine').disabled = false;
+        document.getElementById('btnChaosEngine').textContent = '🚀 Launch Chaos Engine';
+      }
+      
+      // Update chaos engine progress
+      updateChaosProgress(current, total) {
+        const percentage = (current / total) * 100;
+        document.getElementById('chaosProgressFill').style.width = percentage + '%';
+        document.getElementById('chaosProgressText').textContent = percentage.toFixed(1) + '% Complete';
+        document.getElementById('chaosTestsCompleted').textContent = current.toLocaleString() + ' tests completed';
+      }
+      
+      // Run chaos engine with mass testing
+      async runChaosEngine(totalTests, scenario, stressLevel, strategyType, params, fee, initialCapital) {
+        const results = {
+          totalTests: totalTests,
+          tests: [],
+          scenarioResults: {},
+          summary: {
+            successRate: 0,
+            avgReturn: 0,
+            avgDrawdown: 0,
+            avgSharpe: 0,
+            survivalRate: 0,
+            bestReturn: -Infinity,
+            worstReturn: Infinity,
+            bestSharpe: -Infinity,
+            worstDrawdown: 0
+          }
+        };
+        
+        // Initialize scenario tracking
+        const scenarios = ['normal', 'volatile', 'crisis', 'bubble', 'trending', 'sideways'];
+        scenarios.forEach(s => {
+          results.scenarioResults[s] = { count: 0, returns: [], drawdowns: [], sharpes: [] };
+        });
+        
+        // Run tests in batches for performance
+        const batchSize = Math.min(1000, Math.ceil(totalTests / 100));
+        let completedTests = 0;
+        
+        for (let batch = 0; batch < totalTests; batch += batchSize) {
+          const currentBatchSize = Math.min(batchSize, totalTests - batch);
+          
+          // Process batch
+          for (let i = 0; i < currentBatchSize; i++) {
+            const testResult = this.runSingleChaosTest(scenario, stressLevel, strategyType, params, fee, initialCapital);
+            
+            results.tests.push(testResult);
+            
+            // Track scenario performance
+            const testScenario = testResult.scenario;
+            if (results.scenarioResults[testScenario]) {
+              results.scenarioResults[testScenario].count++;
+              results.scenarioResults[testScenario].returns.push(testResult.totalReturn);
+              results.scenarioResults[testScenario].drawdowns.push(testResult.maxDrawdown);
+              results.scenarioResults[testScenario].sharpes.push(testResult.sharpeRatio);
+            }
+            
+            completedTests++;
+            
+            // Update progress every 100 tests
+            if (completedTests % 100 === 0) {
+              this.updateChaosProgress(completedTests, totalTests);
+              // Allow UI to update
+              await new Promise(resolve => setTimeout(resolve, 0));
+            }
+          }
+        }
+        
+        // Calculate final summary
+        this.calculateChaosSummary(results);
+        
+        // Hide progress
+        this.hideChaosProgress();
+        
+        return results;
+      }
+      
+      // Run single chaos test
+      runSingleChaosTest(scenario, stressLevel, strategyType, params, fee, initialCapital) {
+        // Generate chaotic market data
+        const chaoticMarket = this.generateChaoticMarket(scenario, stressLevel);
+        
+        // Run backtest on chaotic market
+        const results = this.executeStrategyOnMarket(chaoticMarket, strategyType, params, fee, initialCapital);
+        
+        // Add scenario information
+        results.scenario = scenario;
+        results.stressLevel = stressLevel;
+        
+        return results;
+      }
+      
+      // Generate chaotic market with realistic patterns
+      generateChaoticMarket(scenario, stressLevel) {
+        const candles = 1000;
+        const baseVolatility = this.getBaseVolatility(stressLevel);
+        const scenarioMultiplier = this.getScenarioMultiplier(scenario);
+        
+        const market = {
+          assets: {},
+          timestamps: [],
+          correlationMatrix: {}
+        };
+        
+        // Generate timestamps
+        for (let i = 0; i < candles; i++) {
+          market.timestamps.push(Date.now() - (candles - i - 1) * 24 * 60 * 60 * 1000);
+        }
+        
+        // Generate assets with chaotic patterns
+        this.selectedAssets.forEach(assetKey => {
+          const asset = this.assets[assetKey];
+          const prices = this.generateChaoticPriceSeries(
+            candles, 
+            scenario, 
+            stressLevel, 
+            asset.defaultPrice || 100,
+            baseVolatility,
+            scenarioMultiplier
+          );
+          
+          market.assets[assetKey] = {
+            ...asset,
+            prices: prices
+          };
+        });
+        
+        // Generate correlation matrix
+        market.correlationMatrix = this.generateChaoticCorrelations(this.selectedAssets, scenario, stressLevel);
+        
+        return market;
+      }
+      
+      // Get base volatility based on stress level
+      getBaseVolatility(stressLevel) {
+        const volatilityMap = {
+          'low': 0.01,
+          'medium': 0.02,
+          'high': 0.04,
+          'extreme': 0.08
+        };
+        return volatilityMap[stressLevel] || 0.02;
+      }
+      
+      // Get scenario multiplier
+      getScenarioMultiplier(scenario) {
+        const multiplierMap = {
+          'normal': 1.0,
+          'volatile': 1.5,
+          'crisis': 2.5,
+          'bubble': 2.0,
+          'trending': 1.2,
+          'sideways': 0.8,
+          'mixed': 1.3
+        };
+        return multiplierMap[scenario] || 1.0;
+      }
+      
+      // Generate chaotic price series with realistic patterns
+      generateChaoticPriceSeries(candles, scenario, stressLevel, startPrice, baseVolatility, scenarioMultiplier) {
+        const prices = [startPrice];
+        let currentPrice = startPrice;
+        
+        // Scenario-specific parameters
+        const scenarioParams = this.getScenarioParameters(scenario, stressLevel);
+        
+        for (let i = 1; i < candles; i++) {
+          let volatility = baseVolatility * scenarioMultiplier;
+          let drift = 0;
+          
+          // Apply scenario-specific patterns
+          if (scenario === 'crisis') {
+            // Crisis: High volatility, negative drift, occasional crashes
+            volatility *= 1 + Math.random() * 2;
+            drift = -0.001 - Math.random() * 0.002;
+            
+            // Random crash events
+            if (Math.random() < 0.01) {
+              currentPrice *= 0.7 + Math.random() * 0.2; // 10-30% crash
+            }
+          } else if (scenario === 'bubble') {
+            // Bubble: Increasing volatility, positive drift, eventual crash
+            volatility *= 1 + (i / candles) * 2;
+            drift = 0.002 + (i / candles) * 0.003;
+            
+            // Bubble burst at 80% of the way
+            if (i > candles * 0.8 && Math.random() < 0.1) {
+              currentPrice *= 0.5 + Math.random() * 0.3; // 20-50% crash
+            }
+          } else if (scenario === 'trending') {
+            // Trending: Low volatility, consistent drift
+            volatility *= 0.8;
+            drift = Math.random() > 0.5 ? 0.001 : -0.001;
+          } else if (scenario === 'sideways') {
+            // Sideways: Low volatility, mean reversion
+            volatility *= 0.6;
+            const meanPrice = startPrice;
+            const reversion = (meanPrice - currentPrice) * 0.001;
+            drift = reversion;
+          } else if (scenario === 'volatile') {
+            // Volatile: High volatility, random drift
+            volatility *= 1.5 + Math.random();
+            drift = (Math.random() - 0.5) * 0.003;
+          }
+          
+          // Generate price change
+          const change = (Math.random() - 0.5) * volatility + drift;
+          currentPrice = Math.max(currentPrice * (1 + change), 0.01);
+          
+          // Apply scenario-specific filters
+          currentPrice = this.applyScenarioFilters(currentPrice, scenario, i, candles);
+          
+          prices.push(currentPrice);
+        }
+        
+        return prices;
+      }
+      
+      // Get scenario-specific parameters
+      getScenarioParameters(scenario, stressLevel) {
+        const params = {
+          'crisis': { crashProbability: 0.01, recoveryTime: 100 },
+          'bubble': { bubbleStrength: 0.8, burstProbability: 0.1 },
+          'trending': { trendStrength: 0.7, reversalProbability: 0.05 },
+          'sideways': { meanReversion: 0.8, breakoutProbability: 0.02 },
+          'volatile': { volatilitySpikes: 0.1, calmPeriods: 0.3 }
+        };
+        
+        return params[scenario] || {};
+      }
+      
+      // Apply scenario-specific filters
+      applyScenarioFilters(price, scenario, index, totalCandles) {
+        if (scenario === 'crisis' && index > totalCandles * 0.7) {
+          // Crisis recovery phase
+          return price * (1 + Math.random() * 0.01);
+        } else if (scenario === 'bubble' && index > totalCandles * 0.9) {
+          // Post-bubble stabilization
+          return price * (1 + (Math.random() - 0.5) * 0.005);
+        }
+        
+        return price;
+      }
+      
+      // Generate chaotic correlations
+      generateChaoticCorrelations(assets, scenario, stressLevel) {
+        const matrix = {};
+        
+        assets.forEach(asset1 => {
+          matrix[asset1] = {};
+          assets.forEach(asset2 => {
+            if (asset1 === asset2) {
+              matrix[asset1][asset2] = 1;
+            } else {
+              let baseCorrelation = this.getRealisticCorrelation(asset1, asset2);
+              
+              // Apply scenario-specific correlation changes
+              if (scenario === 'crisis') {
+                // Crisis: correlations increase (flight to quality)
+                baseCorrelation = Math.min(0.95, baseCorrelation + 0.2);
+              } else if (scenario === 'bubble') {
+                // Bubble: correlations increase (everything goes up)
+                baseCorrelation = Math.min(0.9, baseCorrelation + 0.15);
+              } else if (scenario === 'sideways') {
+                // Sideways: correlations decrease (divergence)
+                baseCorrelation = Math.max(-0.3, baseCorrelation - 0.1);
+              }
+              
+              // Add some randomness based on stress level
+              const randomness = (Math.random() - 0.5) * (stressLevel === 'extreme' ? 0.3 : 0.1);
+              matrix[asset1][asset2] = Math.max(-1, Math.min(1, baseCorrelation + randomness));
+            }
+          });
+        });
+        
+        return matrix;
+      }
+      
+      // Get realistic correlation between assets
+      getRealisticCorrelation(asset1, asset2) {
+        const correlations = {
+          'bitcoin-ethereum': 0.7,
+          'bitcoin-gold': 0.1,
+          'bitcoin-sp500': 0.3,
+          'bitcoin-nasdaq': 0.4,
+          'gold-sp500': -0.1,
+          'gold-nasdaq': -0.15,
+          'sp500-nasdaq': 0.9
+        };
+        
+        const key = `${asset1}-${asset2}`;
+        const reverseKey = `${asset2}-${asset1}`;
+        
+        return correlations[key] || correlations[reverseKey] || (Math.random() - 0.5) * 0.6;
+      }
+      
+      // Execute strategy on specific market data
+      executeStrategyOnMarket(marketData, strategyType, params, fee, initialCapital) {
+        // Temporarily replace current market data
+        const originalMarket = this.marketData;
+        this.marketData = marketData;
+        
+        // Run strategy
+        const results = this.executeStrategy(strategyType, params, fee, initialCapital);
+        
+        // Restore original market data
+        this.marketData = originalMarket;
+        
+        return results;
+      }
+      
+      // Calculate chaos engine summary
+      calculateChaosSummary(results) {
+        const tests = results.tests;
+        
+        if (tests.length === 0) return;
+        
+        // Calculate basic metrics
+        const returns = tests.map(t => t.totalReturn);
+        const drawdowns = tests.map(t => t.maxDrawdown);
+        const sharpes = tests.map(t => t.sharpeRatio);
+        
+        results.summary.avgReturn = returns.reduce((a, b) => a + b, 0) / returns.length;
+        results.summary.avgDrawdown = drawdowns.reduce((a, b) => a + b, 0) / drawdowns.length;
+        results.summary.avgSharpe = sharpes.reduce((a, b) => a + b, 0) / sharpes.length;
+        
+        results.summary.bestReturn = Math.max(...returns);
+        results.summary.worstReturn = Math.min(...returns);
+        results.summary.bestSharpe = Math.max(...sharpes);
+        results.summary.worstDrawdown = Math.max(...drawdowns);
+        
+        // Calculate success rate (profitable tests)
+        const profitableTests = tests.filter(t => t.totalReturn > 0).length;
+        results.summary.successRate = (profitableTests / tests.length) * 100;
+        
+        // Calculate survival rate (tests with drawdown < 50%)
+        const survivingTests = tests.filter(t => t.maxDrawdown < 0.5).length;
+        results.summary.survivalRate = (survivingTests / tests.length) * 100;
+      }
+      
+      // Display chaos engine results
+      displayChaosResults(results) {
+        document.querySelector('.chaos-results').style.display = 'block';
+        
+        // Update summary KPIs
+        document.getElementById('chaosTotalTests').textContent = results.totalTests.toLocaleString();
+        document.getElementById('chaosSuccessRate').textContent = results.summary.successRate.toFixed(1) + '%';
+        document.getElementById('chaosAvgReturn').textContent = results.summary.avgReturn.toFixed(2) + '%';
+        document.getElementById('chaosMaxDD').textContent = (results.summary.avgDrawdown * 100).toFixed(2) + '%';
+        document.getElementById('chaosSharpe').textContent = results.summary.avgSharpe.toFixed(2);
+        document.getElementById('chaosSurvivalRate').textContent = results.summary.survivalRate.toFixed(1) + '%';
+        
+        // Render charts
+        this.renderChaosCharts(results);
+        
+        // Render scenario breakdown
+        this.renderChaosScenarioBreakdown(results);
+        
+        // Render recommendations
+        this.renderChaosRecommendations(results);
+      }
+      
+      // Render chaos engine charts
+      renderChaosCharts(results) {
+        // Return distribution chart
+        this.renderDistributionChart('chaosReturnChart', 
+          results.tests.map(t => t.totalReturn), 
+          'Return Distribution (%)', 
+          'Frequency'
+        );
+        
+        // Drawdown distribution chart
+        this.renderDistributionChart('chaosDrawdownChart', 
+          results.tests.map(t => t.maxDrawdown * 100), 
+          'Max Drawdown (%)', 
+          'Frequency'
+        );
+      }
+      
+      // Render distribution chart
+      renderDistributionChart(canvasId, data, xLabel, yLabel) {
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) return;
+        
+        const ctx = canvas.getContext('2d');
+        const width = canvas.width;
+        const height = canvas.height;
+        
+        ctx.clearRect(0, 0, width, height);
+        
+        // Create histogram
+        const min = Math.min(...data);
+        const max = Math.max(...data);
+        const binCount = 20;
+        const binSize = (max - min) / binCount;
+        
+        const bins = new Array(binCount).fill(0);
+        data.forEach(value => {
+          const binIndex = Math.min(Math.floor((value - min) / binSize), binCount - 1);
+          bins[binIndex]++;
+        });
+        
+        const maxBin = Math.max(...bins);
+        
+        // Draw histogram
+        ctx.fillStyle = '#66e0a3';
+        bins.forEach((count, i) => {
+          const x = (i / binCount) * (width - 40) + 20;
+          const barHeight = (count / maxBin) * (height - 60);
+          const y = height - 20 - barHeight;
+          
+          ctx.fillRect(x, y, (width - 40) / binCount - 2, barHeight);
+        });
+        
+        // Draw labels
+        ctx.fillStyle = '#333';
+        ctx.font = '12px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(xLabel, width / 2, height - 5);
+      }
+      
+      // Render scenario breakdown
+      renderChaosScenarioBreakdown(results) {
+        const container = document.getElementById('chaosScenarioBreakdown');
+        if (!container) return;
+        
+        container.innerHTML = '';
+        
+        Object.entries(results.scenarioResults).forEach(([scenario, data]) => {
+          if (data.count === 0) return;
+          
+          const avgReturn = data.returns.reduce((a, b) => a + b, 0) / data.returns.length;
+          const avgDrawdown = data.drawdowns.reduce((a, b) => a + b, 0) / data.drawdowns.length;
+          const avgSharpe = data.sharpes.reduce((a, b) => a + b, 0) / data.sharpes.length;
+          
+          const div = document.createElement('div');
+          div.className = 'scenario-item';
+          div.innerHTML = `
+            <h6>${scenario.charAt(0).toUpperCase() + scenario.slice(1)} Markets</h6>
+            <p>Tests: ${data.count} | Avg Return: ${avgReturn.toFixed(2)}% | Avg DD: ${(avgDrawdown * 100).toFixed(2)}% | Avg Sharpe: ${avgSharpe.toFixed(2)}</p>
+          `;
+          
+          container.appendChild(div);
+        });
+      }
+      
+      // Render chaos recommendations
+      renderChaosRecommendations(results) {
+        const container = document.getElementById('chaosRecommendations');
+        if (!container) return;
+        
+        container.innerHTML = '';
+        
+        const recommendations = this.generateChaosRecommendations(results);
+        
+        recommendations.forEach(rec => {
+          const div = document.createElement('div');
+          div.className = `recommendation ${rec.priority}`;
+          div.innerHTML = `
+            <strong>${rec.category}</strong> (${rec.priority} priority)<br>
+            ${rec.message}<br>
+            <em>Action: ${rec.action}</em>
+          `;
+          
+          container.appendChild(div);
+        });
+      }
+      
+      // Generate chaos recommendations
+      generateChaosRecommendations(results) {
+        const recommendations = [];
+        
+        // Success rate analysis
+        if (results.summary.successRate < 40) {
+          recommendations.push({
+            category: 'Strategy Performance',
+            priority: 'high',
+            message: 'Strategy shows poor performance across market scenarios. Consider fundamental changes to the approach.',
+            action: 'Review strategy logic and risk management rules'
+          });
+        } else if (results.summary.successRate < 60) {
+          recommendations.push({
+            category: 'Strategy Performance',
+            priority: 'medium',
+            message: 'Strategy performance is below average. Some optimization may be needed.',
+            action: 'Fine-tune parameters and test additional scenarios'
+          });
+        }
+        
+        // Drawdown analysis
+        if (results.summary.avgDrawdown > 0.3) {
+          recommendations.push({
+            category: 'Risk Management',
+            priority: 'high',
+            message: 'Strategy shows excessive drawdowns. Risk management needs improvement.',
+            action: 'Implement stop-losses and position sizing rules'
+          });
+        }
+        
+        // Scenario analysis
+        const worstScenario = Object.entries(results.scenarioResults)
+          .filter(([_, data]) => data.count > 0)
+          .sort(([_, a], [__, b]) => {
+            const aAvg = a.returns.reduce((sum, r) => sum + r, 0) / a.returns.length;
+            const bAvg = b.returns.reduce((sum, r) => sum + r, 0) / b.returns.length;
+            return aAvg - bAvg;
+          })[0];
+        
+        if (worstScenario) {
+          const [scenario, data] = worstScenario;
+          const avgReturn = data.returns.reduce((a, b) => a + b, 0) / data.returns.length;
+          
+          if (avgReturn < -10) {
+            recommendations.push({
+              category: 'Market Scenario',
+              priority: 'medium',
+              message: `Strategy struggles in ${scenario} markets (avg return: ${avgReturn.toFixed(2)}%).`,
+              action: 'Develop scenario-specific adaptations or avoid trading in these conditions'
+            });
+          }
+        }
+        
+        // Overall assessment
+        if (results.summary.successRate > 70 && results.summary.avgDrawdown < 0.2) {
+          recommendations.push({
+            category: 'Strategy Assessment',
+            priority: 'low',
+            message: 'Strategy shows robust performance across various market conditions.',
+            action: 'Continue monitoring and consider live trading with proper risk management'
+          });
+        }
+        
+        return recommendations;
       }
       
       // Run backtest with selected strategy
