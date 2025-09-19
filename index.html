@@ -1,3345 +1,596 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Advanced Trading Algorithm Tester • Multi-Asset Backtesting & Analysis</title>
-  <link rel="stylesheet" href="styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gold Trading Simulator - XAU/USD</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+            background: linear-gradient(45deg, #ffd700, #ffb347);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: #a0a0a0;
+            font-size: 0.9rem;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #e0e0e0;
+            font-size: 0.9rem;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #ffd700;
+            box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.2);
+        }
+
+        input::placeholder {
+            color: #a0a0a0;
+        }
+
+        .input-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(45deg, #ffd700, #ffb347);
+            color: #1a1a2e;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(255, 215, 0, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .price-display {
+            text-align: center;
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(255, 215, 0, 0.1);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+
+        .current-price {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #ffd700;
+            margin-bottom: 5px;
+        }
+
+        .price-change {
+            font-size: 0.9rem;
+        }
+
+        .price-up { color: #4ade80; }
+        .price-down { color: #f87171; }
+
+        .results {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-label {
+            color: #a0a0a0;
+        }
+
+        .result-value {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .profit { color: #4ade80; }
+        .loss { color: #f87171; }
+
+        .contact-section {
+            text-align: center;
+            margin-top: 30px;
+            padding: 25px;
+            background: rgba(255, 215, 0, 0.05);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+        }
+
+        .contact-title {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            color: #ffd700;
+        }
+
+        .contact-text {
+            color: #a0a0a0;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+
+        .contact-btn {
+            background: linear-gradient(45deg, #4ade80, #22c55e);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+
+        .contact-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(74, 222, 128, 0.3);
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 215, 0, 0.3);
+            border-top: 4px solid #ffd700;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .market-info {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-size: 0.85rem;
+            color: #a0a0a0;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 0 10px;
+            }
+            
+            .card {
+                padding: 20px;
+                margin-bottom: 15px;
+            }
+            
+            .input-group {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+        }
+    </style>
 </head>
 <body>
-  <header>
-    <div class="title">
-      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M3 12h18M12 3v18" stroke="#66e0a3" stroke-width="1.4"/>
-      </svg>
-      <div>
-        <div style="font-weight:800;font-size:18px;letter-spacing:.3px">Advanced Trading Algorithm Tester</div>
-        <div class="muted small">Multi-Asset Backtesting • Strategy Analysis • Comprehensive Reporting</div>
-      </div>
-    </div>
-    <span class="badge">Professional Trading Simulation Platform</span>
-  </header>
-
-  <!-- Strategy Privacy Notice -->
-  <div class="privacy-notice">
     <div class="container">
-      <div class="privacy-content">
-        <div class="privacy-icon">🔒</div>
-        <div class="privacy-text">
-          <strong>Your Strategy Data is Secure</strong>
-          <span>All trading strategies and backtest results are encrypted and stored locally. Only you can access your data.</span>
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">🥇</div>
+            <h1>Gold Trading Simulator</h1>
+            <p class="subtitle">Simula tu estrategia en XAU/USD</p>
         </div>
-        <div class="privacy-actions">
-          <button class="btn-learn-more">Learn More</button>
+
+        <!-- Current Price Display -->
+        <div class="price-display">
+            <div class="current-price" id="currentPrice">$3,600.00</div>
+            <div class="price-change" id="priceChange">
+                <span id="changeAmount">+12.50</span> (<span id="changePercent">+0.35%</span>)
+            </div>
         </div>
-      </div>
-    </div>
-  </div>
 
-  <div class="container">
-    <div class="grid">
-      <!-- 1) Asset Selection -->
-      <section class="card col-4">
-        <div class="body">
-          <h3>1) Select Assets</h3>
-          <div id="assetSelector" class="asset-selector">
-            <!-- Asset checkboxes will be rendered here -->
-          </div>
-          <div class="row" style="margin-top:12px">
-            <button id="btnAddAsset" class="ghost">Add Asset</button>
-            <button id="btnRemoveAsset" class="ghost">Remove Asset</button>
-          </div>
+        <!-- Market Info -->
+        <div class="market-info">
+            <strong>💡 Mercado del Oro:</strong> Simulación basada en datos históricos y tendencias actuales del XAU/USD. El precio actual de referencia es ~$3,600 por onza.
         </div>
-      </section>
 
-      <!-- 2) Market Generation -->
-      <section class="card col-8">
-        <div class="body">
-          <h3>2) Generate Market Data</h3>
-          <div class="row" style="gap:12px;align-items:flex-end">
-            <div>
-              <label>Seed</label><br/>
-              <input id="seed" type="text" value="markets-2025" placeholder="change for reproducible variations"/>
-            </div>
-            <div>
-              <label>Candles</label><br/>
-              <input id="candles" type="number" min="50" max="10000" value="1000"/>
-            </div>
-            <div>
-              <label>Initial Capital</label><br/>
-              <input id="initialCapital" type="number" min="1000" step="1000" value="10000"/>
-            </div>
-            <div>
-              <label>&nbsp;</label><br/>
-              <button id="btnGenerate" class="primary">Generate Market</button>
-            </div>
-          </div>
-
-          <div class="kpi" style="margin-top:14px">
-            <div class="item"><h4>Candles</h4><div id="kpiCandles" class="val">0</div></div>
-            <div class="item"><h4>Assets</h4><div id="kpiAssets" class="val">0</div></div>
-            <div class="item"><h4>Correlation</h4><div id="kpiCorrelation" class="val">—</div></div>
-            <div class="item"><h4>Volatility</h4><div id="kpiVolatility" class="val">—</div></div>
-          </div>
-
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px">
-            <div>
-              <div class="muted small" style="margin:6px 0">Asset Prices</div>
-              <canvas id="chartPrices" width="540" height="260"></canvas>
-            </div>
-            <div>
-              <div class="muted small" style="margin:6px 0">Correlation Matrix</div>
-              <div id="correlationMatrix" class="correlation-matrix"></div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- 3) Enhanced Strategy Configuration -->
-      <section class="card col-4">
-        <div class="body">
-          <h3>3) Deploy Your Strategy</h3>
-          
-          <!-- Strategy Type Selection -->
-          <div class="strategy-deployment">
-            <div class="strategy-type-selector">
-              <label>Strategy Type</label>
-              <div id="strategySelector" class="strategy-selector">
-                <!-- Strategy selector will be rendered here -->
-              </div>
-            </div>
-
-            <!-- Strategy Parameters -->
-            <div id="strategyParams" class="strategy-params">
-              <!-- Strategy parameters will be rendered here -->
-            </div>
-
-            <!-- Strategy Security & Privacy -->
-            <div class="strategy-security">
-              <div class="security-item">
-                <span class="security-icon">🔐</span>
-                <span class="security-text">Strategy encrypted locally</span>
-              </div>
-              <div class="security-item">
-                <span class="security-icon">🚫</span>
-                <span class="security-text">No data sent to servers</span>
-              </div>
-              <div class="security-item">
-                <span class="security-icon">💾</span>
-                <span class="security-text">Stored in your browser</span>
-              </div>
-            </div>
-
-            <!-- Strategy Deployment Actions -->
-            <div class="strategy-actions">
-              <button id="btnDeployStrategy" class="primary deploy-btn">
-                <span class="btn-icon">🚀</span>
-                Deploy Strategy
-              </button>
-              <button id="btnSaveStrategy" class="ghost">
-                <span class="btn-icon">💾</span>
-                Save Strategy
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- 4) Backtesting & Results -->
-      <section class="card col-8">
-        <div class="body">
-          <h3>4) Backtesting & Results</h3>
-          <div class="row" style="gap:12px;align-items:flex-end">
-            <div>
-              <label>Fee (per trade)</label><br/>
-              <input id="fee" type="number" step="0.0001" value="0.001"/>
-            </div>
-            <div>
-              <label>&nbsp;</label><br/>
-              <button id="btnBacktest" class="primary">Run Backtest</button>
-              <button id="btnResetStrat" class="ghost">Reset</button>
-            </div>
-          </div>
-
-          <div class="kpi" style="margin-top:12px">
-            <div class="item"><h4>Trades</h4><div id="kpiTrades" class="val">0</div></div>
-            <div class="item"><h4>Return</h4><div id="kpiRet" class="val">—</div></div>
-            <div class="item"><h4>Max Drawdown</h4><div id="kpiDD" class="val">—</div></div>
-            <div class="item"><h4>Sharpe Ratio</h4><div id="kpiSharpe" class="val">—</div></div>
-          </div>
-
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px">
-            <div>
-              <div class="muted small" style="margin:6px 0">Equity Curve</div>
-              <canvas id="chartEquity" width="540" height="260"></canvas>
-            </div>
-            <div>
-              <div class="muted small" style="margin:6px 0">Trade Analysis</div>
-              <div id="tradeAnalysis" class="trade-analysis"></div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- 5) Broker Partnership & CPA Integration -->
-      <section class="card col-6">
-        <div class="body">
-          <h3>5) 🏦 Broker Partnership</h3>
-          <div class="broker-integration">
-            <div class="broker-info">
-              <div class="broker-logo">🏦</div>
-              <div class="broker-details">
-                <h4>Premium Broker Partner</h4>
-                <p>Access institutional-grade trading infrastructure with competitive fees</p>
-              </div>
-            </div>
+        <!-- Strategy Input Form -->
+        <div class="card">
+            <h2 style="margin-bottom: 20px; font-size: 1.3rem;">📊 Tu Estrategia</h2>
             
-            <div class="cpa-section">
-              <h5>💰 Special Offers & Rebates</h5>
-              <div class="cpa-links">
-                <a href="#" class="cpa-link primary" id="cpaLink">
-                  <span class="link-icon">🎯</span>
-                  Get Exclusive CPA Rates
-                </a>
-                <a href="#" class="cpa-link secondary" id="rebatesLink">
-                  <span class="link-icon">💸</span>
-                  View Rebate Program
-                </a>
-              </div>
-              <div class="cpa-benefits">
-                <div class="benefit-item">
-                  <span class="benefit-icon">📈</span>
-                  <span>Lower trading fees</span>
+            <div class="form-group">
+                <label for="tradeDirection">Dirección de la Operación</label>
+                <select id="tradeDirection">
+                    <option value="buy">🟢 Comprar (Long) - Espero que suba</option>
+                    <option value="sell">🔴 Vender (Short) - Espero que baje</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="entryPrice">Precio de Entrada (USD)</label>
+                <input type="number" id="entryPrice" value="3600" step="0.01" placeholder="3600.00">
+            </div>
+
+            <div class="input-group">
+                <div class="form-group">
+                    <label for="takeProfit">Take Profit ($)</label>
+                    <input type="number" id="takeProfit" value="3650" step="0.01" placeholder="3650.00">
                 </div>
-                <div class="benefit-item">
-                  <span class="benefit-icon">🎁</span>
-                  <span>Welcome bonuses</span>
+                <div class="form-group">
+                    <label for="stopLoss">Stop Loss ($)</label>
+                    <input type="number" id="stopLoss" value="3550" step="0.01" placeholder="3550.00">
                 </div>
-                <div class="benefit-item">
-                  <span class="benefit-icon">🔒</span>
-                  <span>Regulated security</span>
-                </div>
-              </div>
             </div>
-          </div>
-        </div>
-      </section>
 
-      <!-- 6) Success Strategy Flow -->
-      <section class="card col-6">
-        <div class="body">
-          <h3>6) 🎯 Success Strategy Flow</h3>
-          <div class="success-flow">
-            <div class="flow-step active" data-step="1">
-              <div class="step-number">1</div>
-              <div class="step-content">
-                <h5>Test & Validate</h5>
-                <p>Run comprehensive backtests across multiple market scenarios</p>
-              </div>
+            <div class="input-group">
+                <div class="form-group">
+                    <label for="lotSize">Tamaño (Onzas)</label>
+                    <input type="number" id="lotSize" value="1" step="0.1" min="0.1" placeholder="1.0">
+                </div>
+                <div class="form-group">
+                    <label for="timeframe">Tiempo (días)</label>
+                    <input type="number" id="timeframe" value="30" min="1" max="365" placeholder="30">
+                </div>
             </div>
-            
-            <div class="flow-step" data-step="2">
-              <div class="step-number">2</div>
-              <div class="step-content">
-                <h5>Analyze Performance</h5>
-                <p>Review risk metrics, drawdowns, and consistency</p>
-              </div>
-            </div>
-            
-            <div class="flow-step" data-step="3">
-              <div class="step-number">3</div>
-              <div class="step-content">
-                <h5>Optimize Parameters</h5>
-                <p>Fine-tune strategy parameters for better results</p>
-              </div>
-            </div>
-            
-            <div class="flow-step" data-step="4">
-              <div class="step-number">4</div>
-              <div class="step-content">
-                <h5>Live Trading</h5>
-                <p>Deploy with proper risk management</p>
-              </div>
-            </div>
-          </div>
-          
-          <div class="success-actions">
-            <button id="btnAnalyzeStrategy" class="primary">
-              <span class="btn-icon">📊</span>
-              Analyze Strategy
+
+            <button class="btn" id="simulateBtn" onclick="runSimulation()">
+                🚀 Simular Estrategia
             </button>
-            <button id="btnOptimizeStrategy" class="ghost">
-              <span class="btn-icon">⚙️</span>
-              Optimize Parameters
+        </div>
+
+        <!-- Loading -->
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Simulando tu estrategia...</p>
+        </div>
+
+        <!-- Results -->
+        <div class="card results" id="results">
+            <h2 style="margin-bottom: 20px; font-size: 1.3rem;">📈 Resultados de la Simulación</h2>
+            
+            <div class="result-item">
+                <span class="result-label">Resultado Final:</span>
+                <span class="result-value" id="finalResult">-</span>
+            </div>
+            
+            <div class="result-item">
+                <span class="result-label">Ganancia/Pérdida:</span>
+                <span class="result-value" id="profitLoss">-</span>
+            </div>
+            
+            <div class="result-item">
+                <span class="result-label">ROI:</span>
+                <span class="result-value" id="roi">-</span>
+            </div>
+            
+            <div class="result-item">
+                <span class="result-label">Precio Final:</span>
+                <span class="result-value" id="finalPrice">-</span>
+            </div>
+            
+            <div class="result-item">
+                <span class="result-label">Días Transcurridos:</span>
+                <span class="result-value" id="daysElapsed">-</span>
+            </div>
+
+            <button class="btn" onclick="resetSimulation()" style="margin-top: 20px;">
+                🔄 Nueva Simulación
             </button>
-          </div>
         </div>
-      </section>
 
-      <section class="card col-12">
-        <div class="body">
-          <h3>7) 🌀 Caos Engine - Mass Strategy Testing</h3>
-          <div class="chaos-engine-header">
-            <p class="muted">Test your strategies across millions of simulated markets with realistic market patterns, volatility regimes, and extreme scenarios. Includes proof of work validation for enhanced security.</p>
-          </div>
-          
-          <div class="chaos-controls">
-            <div class="row" style="gap:20px;align-items:flex-end;margin-bottom:20px">
-              <div>
-                <label>Test Iterations (Millions)</label><br/>
-                <input id="chaosIterations" type="number" min="0.001" max="100" step="0.001" value="0.1" placeholder="0.1 = 100,000 tests"/>
-              </div>
-              <div>
-                <label>Market Scenarios</label><br/>
-                <select id="chaosScenarios">
-                  <option value="normal">Normal Markets</option>
-                  <option value="volatile">High Volatility</option>
-                  <option value="crisis">Market Crisis</option>
-                  <option value="bubble">Bubble & Crash</option>
-                  <option value="trending">Strong Trends</option>
-                  <option value="sideways">Sideways Markets</option>
-                  <option value="mixed">Mixed Patterns</option>
-                </select>
-              </div>
-              <div>
-                <label>Stress Level</label><br/>
-                <select id="chaosStressLevel">
-                  <option value="low">Low (Conservative)</option>
-                  <option value="medium" selected>Medium (Balanced)</option>
-                  <option value="high">High (Aggressive)</option>
-                  <option value="extreme">Extreme (Maximum)</option>
-                </select>
-              </div>
-              <div>
-                <label>Proof of Work Difficulty</label><br/>
-                <select id="chaosProofOfWorkDifficulty">
-                  <option value="1" selected>Level 1 (Light)</option>
-                  <option value="2">Level 2 (Medium)</option>
-                  <option value="3">Level 3 (Heavy)</option>
-                  <option value="4">Level 4 (Extreme)</option>
-                </select>
-              </div>
-              <div>
-                <label>&nbsp;</label><br/>
-                <button id="btnChaosEngine" class="primary chaos-btn">🚀 Launch Caos Engine</button>
-              </div>
-            </div>
-            
-            <div class="chaos-progress" style="display:none">
-              <div class="progress-bar">
-                <div class="progress-fill" id="chaosProgressFill"></div>
-              </div>
-              <div class="progress-text">
-                <span id="chaosProgressText">0% Complete</span>
-                <span id="chaosTestsCompleted">0 tests completed</span>
-              </div>
-              
-              <!-- Performance Metrics -->
-              <div class="chaos-performance-metrics">
-                <div class="metric">
-                  <span class="label">Tests/sec:</span>
-                  <span id="chaosTestsPerSecond" class="value">0</span>
-                </div>
-                <div class="metric">
-                  <span class="label">Time Remaining:</span>
-                  <span id="chaosTimeRemaining" class="value">--</span>
-                </div>
-                <div class="metric">
-                  <span class="label">PoW Hash:</span>
-                  <span id="chaosPowHash" class="value">--</span>
-                </div>
-                <div class="metric">
-                  <span class="label">Nonce:</span>
-                  <span id="chaosPowNonce" class="value">0</span>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div class="chaos-results" style="display:none">
-            <h4>🎯 Chaos Engine Results</h4>
-            <div class="chaos-summary">
-              <div class="chaos-kpi">
-                <h5>Total Tests</h5>
-                <div id="chaosTotalTests" class="val">0</div>
-              </div>
-              <div class="chaos-kpi">
-                <h5>Success Rate</h5>
-                <div id="chaosSuccessRate" class="val">0%</div>
-              </div>
-              <div class="chaos-kpi">
-                <h5>Avg Return</h5>
-                <div id="chaosAvgReturn" class="val">0%</div>
-              </div>
-              <div class="chaos-kpi">
-                <h5>Max Drawdown</h5>
-                <div id="chaosMaxDD" class="val">0%</div>
-              </div>
-              <div class="chaos-kpi">
-                <h5>Sharpe Ratio</h5>
-                <div id="chaosSharpe" class="val">0</div>
-              </div>
-              <div class="chaos-kpi">
-                <h5>Survival Rate</h5>
-                <div id="chaosSurvivalRate" class="val">0%</div>
-              </div>
-            </div>
-            
-            <div class="chaos-charts">
-              <div class="chart-container">
-                <h5>Return Distribution</h5>
-                <canvas id="chaosReturnChart" width="400" height="200"></canvas>
-              </div>
-              <div class="chart-container">
-                <h5>Drawdown Distribution</h5>
-                <canvas id="chaosDrawdownChart" width="400" height="200"></canvas>
-              </div>
-            </div>
-            
-            <div class="chaos-scenarios">
-              <h5>📊 Scenario Performance Breakdown</h5>
-              <div id="chaosScenarioBreakdown"></div>
-            </div>
-            
-            <!-- Quality Report Section -->
-            <div class="chaos-quality-report">
-              <h5>📋 Strategy Quality Assessment</h5>
-              <div id="chaosQualityReport"></div>
-            </div>
-            
-            <!-- Proof of Work Report -->
-            <div class="chaos-proof-of-work">
-              <h5>🔐 Proof of Work Validation</h5>
-              <div id="chaosProofOfWorkReport"></div>
-            </div>
-            
-            <div class="chaos-recommendations">
-              <h5>💡 Strategy Recommendations</h5>
-              <div id="chaosRecommendations"></div>
-            </div>
-            
-            <!-- Export Controls -->
-            <div class="chaos-export-controls">
-              <h5>📤 Export Results</h5>
-              <div class="export-buttons">
-                <button id="btnExportChaosResults" class="ghost">Export Chaos Results</button>
-                <button id="btnExportQualityReport" class="ghost">Export Quality Report</button>
-                <button id="btnExportFullReport" class="primary">Export Full Report</button>
-              </div>
-            </div>
-          </div>
+        <!-- Contact Section -->
+        <div class="contact-section">
+            <h3 class="contact-title">💼 ¿Tienes Resultados Reales?</h3>
+            <p class="contact-text">
+                Si tienes cuentas auditadas o resultados comprobables, podemos conectarte con brokers institucionales para gestión de capital.
+            </p>
+            <a href="mailto:contact@goldtrading.com" class="contact-btn">
+                📧 Contactar Ahora
+            </a>
         </div>
-      </section>
     </div>
 
-    <div class="footer">
-      ⚠️ This platform uses <b>synthetic data</b> for educational and testing purposes. It does not provide trading advice.
-      <br>Always conduct thorough testing before using strategies in live markets.
-    </div>
-  </div>
+    <script>
+        // Gold market simulation engine
+        class GoldMarketSimulator {
+            constructor() {
+                this.currentPrice = 3600.00;
+                this.volatility = 0.02; // 2% daily volatility
+                this.trend = 0.0001; // Slight upward trend
+            }
 
-  <!-- Strategy Privacy Modal -->
-  <div id="privacyModal" class="modal" style="display: none;">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>🔒 Strategy Data Privacy & Security</h3>
-        <button class="modal-close" id="closePrivacyModal">&times;</button>
-      </div>
-      <div class="modal-body">
-        <div class="privacy-section">
-          <h4>🛡️ Data Protection</h4>
-          <ul>
-            <li><strong>Local Storage:</strong> All strategy data is stored locally in your browser</li>
-            <li><strong>No Server Transmission:</strong> Your strategies never leave your device</li>
-            <li><strong>Encryption:</strong> Data is encrypted using browser security features</li>
-            <li><strong>Private Access:</strong> Only you can view your strategy data</li>
-          </ul>
-        </div>
-        
-        <div class="privacy-section">
-          <h4>🔐 Security Features</h4>
-          <ul>
-            <li><strong>Browser Security:</strong> Leverages your browser's built-in security</li>
-            <li><strong>Session Isolation:</strong> Data is isolated per browser session</li>
-            <li><strong>No Tracking:</strong> We don't collect or track your strategies</li>
-            <li><strong>Compliance:</strong> Meets data privacy regulations</li>
-          </ul>
-        </div>
-        
-        <div class="privacy-section">
-          <h4>💡 Best Practices</h4>
-          <ul>
-            <li><strong>Regular Backups:</strong> Export your strategies regularly</li>
-            <li><strong>Secure Device:</strong> Use a secure, private device</li>
-            <li><strong>Clear Data:</strong> Clear browser data when needed</li>
-            <li><strong>Private Mode:</strong> Consider using incognito/private browsing</li>
-          </ul>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn-primary" onclick="document.getElementById('privacyModal').style.display='none'">Got It</button>
-      </div>
-    </div>
-  </div>
+            // Simulate price movement over time
+            simulatePrice(days) {
+                let prices = [this.currentPrice];
+                let currentPrice = this.currentPrice;
 
-  <script>
-    // Working version with basic functionality
-    class SimpleTradingApp {
-      constructor() {
-        this.assets = {
-          bitcoin: { name: 'Bitcoin (BTC)', symbol: 'BTC', color: '#f7931a' },
-          gold: { name: 'Gold (XAU)', symbol: 'XAU', color: '#ffd700' },
-          sp500: { name: 'S&P 500 Index', symbol: 'SPX', color: '#00d4aa' },
-          nasdaq: { name: 'NASDAQ Composite', symbol: 'NDX', color: '#007acc' }
-        };
-        
-        this.selectedAssets = ['bitcoin'];
-        this.marketData = null;
-        this.currentStep = 1;
-        this.init();
-      }
-      
-      init() {
-        this.renderAssetSelector();
-        this.renderStrategySelector();
-        this.setupEventListeners();
-        this.generateMarket();
-        this.updateSuccessFlow();
-      }
-      
-      renderAssetSelector() {
-        const container = document.getElementById('assetSelector');
-        if (!container) return;
-        
-        container.innerHTML = '';
-        
-        Object.entries(this.assets).forEach(([key, asset]) => {
-          const isSelected = this.selectedAssets.includes(key);
-          
-          const div = document.createElement('div');
-          div.className = 'asset-option';
-          
-          const checkbox = document.createElement('input');
-          checkbox.type = 'checkbox';
-          checkbox.id = `asset_${key}`;
-          checkbox.checked = isSelected;
-          
-          const label = document.createElement('label');
-          label.htmlFor = `asset_${key}`;
-          label.textContent = asset.name;
-          
-          checkbox.addEventListener('change', (e) => {
-            if (e.target.checked) {
-              this.addAsset(key);
-            } else {
-              this.removeAsset(key);
-            }
-          });
-          
-          div.appendChild(checkbox);
-          div.appendChild(label);
-          container.appendChild(div);
-        });
-        
-        // Add asset count
-        const countDiv = document.createElement('div');
-        countDiv.className = 'asset-count';
-        countDiv.textContent = `${this.selectedAssets.length} asset(s) selected`;
-        container.appendChild(countDiv);
-      }
-      
-      renderStrategySelector() {
-        const container = document.getElementById('strategySelector');
-        if (!container) return;
-        
-        container.innerHTML = '';
-        
-        const select = document.createElement('select');
-        select.id = 'strategyType';
-        
-        const strategies = [
-          { value: 'ma', name: 'Moving Average Crossover' },
-          { value: 'rsi', name: 'RSI Mean Reversion' },
-          { value: 'bollinger', name: 'Bollinger Bands' },
-          { value: 'custom', name: 'Custom JavaScript' }
-        ];
-        
-        strategies.forEach(strategy => {
-          const option = document.createElement('option');
-          option.value = strategy.value;
-          option.textContent = strategy.name;
-          select.appendChild(option);
-        });
-        
-        select.addEventListener('change', (e) => this.onStrategyChange(e.target.value));
-        container.appendChild(select);
-        
-        this.renderStrategyParams();
-      }
-      
-      renderStrategyParams() {
-        const container = document.getElementById('strategyParams');
-        if (!container) return;
-        
-        container.innerHTML = '';
-        
-        const strategyType = document.getElementById('strategyType')?.value || 'ma';
-        
-        if (strategyType === 'ma') {
-          this.renderMAParams(container);
-        } else if (strategyType === 'rsi') {
-          this.renderRSIParams(container);
-        }
-      }
-      
-      renderMAParams(container) {
-        const fastLabel = document.createElement('label');
-        fastLabel.textContent = 'Fast MA Period';
-        
-        const fastInput = document.createElement('input');
-        fastInput.type = 'number';
-        fastInput.id = 'param_fastMA';
-        fastInput.min = '1';
-        fastInput.max = '100';
-        fastInput.value = '10';
-        
-        const slowLabel = document.createElement('label');
-        slowLabel.textContent = 'Slow MA Period';
-        
-        const slowInput = document.createElement('input');
-        slowInput.type = 'number';
-        slowInput.id = 'param_slowMA';
-        slowInput.min = '2';
-        slowInput.max = '200';
-        slowInput.value = '30';
-        
-        container.appendChild(fastLabel);
-        container.appendChild(fastInput);
-        container.appendChild(slowLabel);
-        container.appendChild(slowInput);
-      }
-      
-      renderRSIParams(container) {
-        const periodLabel = document.createElement('label');
-        periodLabel.textContent = 'RSI Period';
-        
-        const periodInput = document.createElement('input');
-        periodInput.type = 'number';
-        periodInput.id = 'param_period';
-        periodInput.min = '2';
-        periodInput.max = '50';
-        periodInput.value = '14';
-        
-        container.appendChild(periodLabel);
-        container.appendChild(periodInput);
-      }
-      
-      addAsset(assetKey) {
-        if (!this.selectedAssets.includes(assetKey)) {
-          this.selectedAssets.push(assetKey);
-          this.renderAssetSelector();
-        }
-      }
-      
-      removeAsset(assetKey) {
-        if (this.selectedAssets.length > 1) {
-          const index = this.selectedAssets.indexOf(assetKey);
-          if (index > -1) {
-            this.selectedAssets.splice(index, 1);
-            this.renderAssetSelector();
-          }
-        }
-      }
-      
-      generateMarket() {
-        console.log('Generating market for assets:', this.selectedAssets);
-        
-        const candles = parseInt(document.getElementById('candles')?.value || 1000);
-        const seed = document.getElementById('seed')?.value || 'markets-2025';
-        
-        // Generate simple price data
-        this.marketData = {
-          assets: {},
-          timestamps: [],
-          correlationMatrix: {}
-        };
-        
-        this.selectedAssets.forEach(assetKey => {
-          const asset = this.assets[assetKey];
-          const prices = this.generatePriceSeries(candles, seed + '-' + assetKey, 100, 0.0001, 0.02);
-          
-          this.marketData.assets[assetKey] = {
-            ...asset,
-            prices: prices
-          };
-        });
-        
-        // Generate timestamps
-        for (let i = 0; i < candles; i++) {
-          this.marketData.timestamps.push(Date.now() - (candles - i - 1) * 24 * 60 * 60 * 1000);
-        }
-        
-        this.updateMarketDisplay();
-        console.log('Market data generated:', this.marketData);
-      }
-      
-      generatePriceSeries(n, seed, startPrice, drift, volatility) {
-        const prices = [startPrice];
-        let currentPrice = startPrice;
-        
-        for (let i = 1; i < n; i++) {
-          const change = (Math.random() - 0.5) * volatility + drift;
-          currentPrice = Math.max(currentPrice * (1 + change), 0.01);
-          prices.push(currentPrice);
-        }
-        
-        return prices;
-      }
-      
-      updateMarketDisplay() {
-        if (!this.marketData) return;
-        
-        document.getElementById('kpiCandles').textContent = this.marketData.timestamps.length;
-        document.getElementById('kpiAssets').textContent = Object.keys(this.marketData.assets).length;
-        
-        this.renderPriceChart();
-        this.renderCorrelationMatrix();
-      }
-      
-      renderPriceChart() {
-        const canvas = document.getElementById('chartPrices');
-        if (!canvas || !this.marketData) return;
-        
-        const ctx = canvas.getContext('2d');
-        const width = canvas.width;
-        const height = canvas.height;
-        
-        ctx.clearRect(0, 0, width, height);
-        
-        Object.entries(this.marketData.assets).forEach(([key, asset]) => {
-          const prices = asset.prices;
-          const color = asset.color;
-          
-          ctx.strokeStyle = color;
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-          
-          prices.forEach((price, i) => {
-            const x = (i / (prices.length - 1)) * (width - 40) + 20;
-            const y = height - 20 - ((price - Math.min(...prices)) / (Math.max(...prices) - Math.min(...prices))) * (height - 40);
-            
-            if (i === 0) {
-              ctx.moveTo(x, y);
-            } else {
-              ctx.lineTo(x, y);
-            }
-          });
-          
-          ctx.stroke();
-        });
-      }
-      
-      renderCorrelationMatrix() {
-        const container = document.getElementById('correlationMatrix');
-        if (!container || !this.marketData) return;
-        
-        container.innerHTML = '';
-        
-        const assets = Object.keys(this.marketData.assets);
-        if (assets.length < 2) return;
-        
-        const table = document.createElement('table');
-        table.className = 'correlation-table';
-        
-        // Header row
-        const headerRow = document.createElement('tr');
-        headerRow.appendChild(document.createElement('th')).textContent = 'Asset';
-        assets.forEach(assetKey => {
-          const th = document.createElement('th');
-          th.textContent = this.assets[assetKey].symbol;
-          headerRow.appendChild(th);
-        });
-        table.appendChild(headerRow);
-        
-        // Data rows
-        assets.forEach(asset1 => {
-          const row = document.createElement('tr');
-          row.appendChild(document.createElement('td')).textContent = this.assets[asset1].symbol;
-          
-          assets.forEach(asset2 => {
-            const correlation = asset1 === asset2 ? 1 : (Math.random() - 0.5) * 2;
-            const cell = document.createElement('td');
-            cell.textContent = correlation.toFixed(2);
-            cell.className = correlation > 0.5 ? 'high-correlation' : correlation < -0.5 ? 'low-correlation' : 'medium-correlation';
-            row.appendChild(cell);
-          });
-          
-          table.appendChild(row);
-        });
-        
-        container.appendChild(table);
-      }
-      
-      onStrategyChange(strategyType) {
-        this.renderStrategyParams();
-      }
-      
-      updateSuccessFlow() {
-        // Update success flow steps based on current progress
-        const steps = document.querySelectorAll('.flow-step');
-        steps.forEach((step, index) => {
-          if (index + 1 <= this.currentStep) {
-            step.classList.add('active');
-          } else {
-            step.classList.remove('active');
-          }
-        });
-      }
-      
-      setupEventListeners() {
-        document.getElementById('btnAddAsset')?.addEventListener('click', () => {
-          const availableAssets = Object.keys(this.assets).filter(key => 
-            !this.selectedAssets.includes(key)
-          );
-          if (availableAssets.length > 0) {
-            this.addAsset(availableAssets[0]);
-          }
-        });
-        
-        document.getElementById('btnRemoveAsset')?.addEventListener('click', () => {
-          if (this.selectedAssets.length > 1) {
-            this.removeAsset(this.selectedAssets[this.selectedAssets.length - 1]);
-          }
-        });
-        
-        document.getElementById('btnGenerate')?.addEventListener('click', () => this.generateMarket());
-        
-        // Add backtesting event listeners
-        document.getElementById('btnBacktest')?.addEventListener('click', () => this.runBacktest());
-        document.getElementById('btnResetStrat')?.addEventListener('click', () => this.resetStrategy());
-        
-        // Add Chaos Engine event listener
-        document.getElementById('btnChaosEngine')?.addEventListener('click', () => this.launchChaosEngine());
-        
-        // Add Chaos Engine export event listeners
-        document.getElementById('btnExportChaosResults')?.addEventListener('click', () => this.exportChaosResults());
-        document.getElementById('btnExportQualityReport')?.addEventListener('click', () => this.exportQualityReport());
-        document.getElementById('btnExportFullReport')?.addEventListener('click', () => this.exportFullReport());
-        
-        // Add new event listeners
-        document.getElementById('btnDeployStrategy')?.addEventListener('click', () => this.deployStrategy());
-        document.getElementById('btnSaveStrategy')?.addEventListener('click', () => this.saveStrategy());
-        document.getElementById('btnAnalyzeStrategy')?.addEventListener('click', () => this.analyzeStrategy());
-        document.getElementById('btnOptimizeStrategy')?.addEventListener('click', () => this.optimizeStrategy());
-        
-        // Privacy modal
-        document.querySelector('.btn-learn-more')?.addEventListener('click', () => {
-          document.getElementById('privacyModal').style.display = 'block';
-        });
-        
-        document.getElementById('closePrivacyModal')?.addEventListener('click', () => {
-          document.getElementById('privacyModal').style.display = 'none';
-        });
-        
-        // CPA links
-        document.getElementById('cpaLink')?.addEventListener('click', (e) => {
-          e.preventDefault();
-          this.handleCPAClick();
-        });
-        
-        document.getElementById('rebatesLink')?.addEventListener('click', (e) => {
-          e.preventDefault();
-          this.handleRebatesClick();
-        });
-      }
-      
-      // Export Chaos Engine results
-      exportChaosResults() {
-        if (!this.chaosResults) {
-          alert('No Chaos Engine results available to export');
-          return;
-        }
-        
-        const exportData = JSON.stringify(this.chaosResults, null, 2);
-        const blob = new Blob([exportData], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `chaos_engine_results_${new Date().toISOString().split('T')[0]}.json`;
-        a.click();
-        
-        URL.revokeObjectURL(url);
-      }
-      
-      // Export quality report
-      exportQualityReport() {
-        if (!this.qualityReport) {
-          alert('No quality report available to export');
-          return;
-        }
-        
-        const exportData = JSON.stringify(this.qualityReport, null, 2);
-        const blob = new Blob([exportData], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `quality_report_${new Date().toISOString().split('T')[0]}.json`;
-        a.click();
-        
-        URL.revokeObjectURL(url);
-      }
-      
-      // Export full comprehensive report
-      exportFullReport() {
-        if (!this.chaosResults || !this.qualityReport) {
-          alert('No complete results available to export');
-          return;
-        }
-        
-        try {
-          // Create comprehensive report
-          const fullReport = {
-            metadata: {
-              exportTimestamp: new Date().toISOString(),
-              version: '1.0.0',
-              platform: 'Advanced Trading Algorithm Tester',
-              description: 'Comprehensive strategy testing report including Chaos Engine results and quality assessment'
-            },
-            strategy: {
-              type: document.getElementById('strategyType')?.value || 'ma',
-              params: this.getStrategyParams(document.getElementById('strategyType')?.value || 'ma'),
-              customCode: document.getElementById('customStrategyCode')?.value || ''
-            },
-            market: {
-              selectedAssets: this.selectedAssets,
-              settings: {
-                candles: parseInt(document.getElementById('candles')?.value || 1000),
-                seed: document.getElementById('seed')?.value || 'markets-2025',
-                fee: parseFloat(document.getElementById('fee')?.value || 0.001),
-                initialCapital: parseFloat(document.getElementById('initialCapital')?.value || 10000)
-              },
-              marketData: this.marketData ? {
-                candles: this.marketData.timestamps.length,
-                assets: Object.keys(this.marketData.assets),
-                seed: document.getElementById('seed')?.value || 'markets-2025'
-              } : null
-            },
-            chaosEngine: {
-              results: this.chaosResults,
-              qualityReport: this.qualityReport
-            },
-            summary: {
-              totalTests: this.chaosResults.totalTests,
-              successRate: this.chaosResults.summary.successRate,
-              avgReturn: this.chaosResults.summary.avgReturn,
-              avgDrawdown: this.chaosResults.summary.avgDrawdown,
-              avgSharpe: this.chaosResults.summary.avgSharpe
-            },
-            recommendations: this.chaosResults.recommendations || []
-          };
-          
-          // Export as JSON
-          const exportData = JSON.stringify(fullReport, null, 2);
-          const blob = new Blob([exportData], { type: 'application/json' });
-          const url = URL.createObjectURL(blob);
-          
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `comprehensive_trading_report_${new Date().toISOString().split('T')[0]}.json`;
-          a.click();
-          
-          URL.revokeObjectURL(url);
-          
-          console.log('Full comprehensive report exported successfully');
-          
-        } catch (error) {
-          console.error('Error exporting full report:', error);
-          alert('Error exporting full report: ' + error.message);
-        }
-      }
-      
-      // 🌀 Chaos Engine - Mass Strategy Testing
-      async launchChaosEngine() {
-        if (!this.marketData) {
-          alert('Please generate market data first');
-          return;
-        }
-        
-        const iterations = parseFloat(document.getElementById('chaosIterations').value);
-        const scenario = document.getElementById('chaosScenarios').value;
-        const stressLevel = document.getElementById('chaosStressLevel').value;
-        
-        if (iterations <= 0) {
-          alert('Please enter a valid number of iterations');
-          return;
-        }
-        
-        const totalTests = Math.floor(iterations * 1000000); // Convert to actual number
-        console.log(`🚀 Launching Chaos Engine: ${totalTests.toLocaleString()} tests`);
-        
-        // Show progress
-        this.showChaosProgress();
-        
-        // Get current strategy configuration
-        const strategyType = document.getElementById('strategyType')?.value || 'ma';
-        const params = this.getStrategyParams(strategyType);
-        const fee = parseFloat(document.getElementById('fee')?.value || 0.001);
-        const initialCapital = parseFloat(document.getElementById('initialCapital')?.value || 10000);
-        
-        // Run chaos engine
-        const results = await this.runChaosEngine(totalTests, scenario, stressLevel, strategyType, params, fee, initialCapital);
-        
-        // Display results
-        this.displayChaosResults(results);
-        
-        console.log('🌀 Chaos Engine completed:', results);
-      }
-      
-      // Show chaos engine progress
-      showChaosProgress() {
-        document.querySelector('.chaos-progress').style.display = 'block';
-        document.querySelector('.chaos-results').style.display = 'none';
-        document.getElementById('btnChaosEngine').disabled = true;
-        document.getElementById('btnChaosEngine').textContent = '🔄 Running...';
-      }
-      
-      // Hide chaos engine progress
-      hideChaosProgress() {
-        document.querySelector('.chaos-progress').style.display = 'none';
-        document.getElementById('btnChaosEngine').disabled = false;
-        document.getElementById('btnChaosEngine').textContent = '🚀 Launch Chaos Engine';
-      }
-      
-      // Update chaos engine progress
-      updateChaosProgress(current, total) {
-        const percentage = (current / total) * 100;
-        document.getElementById('chaosProgressFill').style.width = percentage + '%';
-        document.getElementById('chaosProgressText').textContent = percentage.toFixed(1) + '% Complete';
-        document.getElementById('chaosTestsCompleted').textContent = current.toLocaleString() + ' tests completed';
-      }
-      
-      // Run chaos engine with mass testing
-      async runChaosEngine(totalTests, scenario, stressLevel, strategyType, params, fee, initialCapital) {
-        const results = {
-          totalTests: totalTests,
-          tests: [],
-          scenarioResults: {},
-          summary: {
-            successRate: 0,
-            avgReturn: 0,
-            avgDrawdown: 0,
-            avgSharpe: 0,
-            survivalRate: 0,
-            bestReturn: -Infinity,
-            worstReturn: Infinity,
-            bestSharpe: -Infinity,
-            worstDrawdown: 0
-          }
-        };
-        
-        // Initialize scenario tracking
-        const scenarios = ['normal', 'volatile', 'crisis', 'bubble', 'trending', 'sideways'];
-        scenarios.forEach(s => {
-          results.scenarioResults[s] = { count: 0, returns: [], drawdowns: [], sharpes: [] };
-        });
-        
-        // Run tests in batches for performance
-        const batchSize = Math.min(1000, Math.ceil(totalTests / 100));
-        let completedTests = 0;
-        
-        for (let batch = 0; batch < totalTests; batch += batchSize) {
-          const currentBatchSize = Math.min(batchSize, totalTests - batch);
-          
-          // Process batch
-          for (let i = 0; i < currentBatchSize; i++) {
-            const testResult = this.runSingleChaosTest(scenario, stressLevel, strategyType, params, fee, initialCapital);
-            
-            results.tests.push(testResult);
-            
-            // Track scenario performance
-            const testScenario = testResult.scenario;
-            if (results.scenarioResults[testScenario]) {
-              results.scenarioResults[testScenario].count++;
-              results.scenarioResults[testScenario].returns.push(testResult.totalReturn);
-              results.scenarioResults[testScenario].drawdowns.push(testResult.maxDrawdown);
-              results.scenarioResults[testScenario].sharpes.push(testResult.sharpeRatio);
-            }
-            
-            completedTests++;
-            
-            // Update progress every 100 tests
-            if (completedTests % 100 === 0) {
-              this.updateChaosProgress(completedTests, totalTests);
-              // Allow UI to update
-              await new Promise(resolve => setTimeout(resolve, 0));
-            }
-          }
-        }
-        
-        // Calculate final summary
-        this.calculateChaosSummary(results);
-        
-        // Hide progress
-        this.hideChaosProgress();
-        
-        return results;
-      }
-      
-      // Run single chaos test
-      runSingleChaosTest(scenario, stressLevel, strategyType, params, fee, initialCapital) {
-        // Generate chaotic market data
-        const chaoticMarket = this.generateChaoticMarket(scenario, stressLevel);
-        
-        // Run backtest on chaotic market
-        const results = this.executeStrategyOnMarket(chaoticMarket, strategyType, params, fee, initialCapital);
-        
-        // Add scenario information
-        results.scenario = scenario;
-        results.stressLevel = stressLevel;
-        
-        return results;
-      }
-      
-      // Generate chaotic market with realistic patterns
-      generateChaoticMarket(scenario, stressLevel) {
-        const candles = 1000;
-        const baseVolatility = this.getBaseVolatility(stressLevel);
-        const scenarioMultiplier = this.getScenarioMultiplier(scenario);
-        
-        const market = {
-          assets: {},
-          timestamps: [],
-          correlationMatrix: {}
-        };
-        
-        // Generate timestamps
-        for (let i = 0; i < candles; i++) {
-          market.timestamps.push(Date.now() - (candles - i - 1) * 24 * 60 * 60 * 1000);
-        }
-        
-        // Generate assets with chaotic patterns
-        this.selectedAssets.forEach(assetKey => {
-          const asset = this.assets[assetKey];
-          const prices = this.generateChaoticPriceSeries(
-            candles, 
-            scenario, 
-            stressLevel, 
-            asset.defaultPrice || 100,
-            baseVolatility,
-            scenarioMultiplier
-          );
-          
-          market.assets[assetKey] = {
-            ...asset,
-            prices: prices
-          };
-        });
-        
-        // Generate correlation matrix
-        market.correlationMatrix = this.generateChaoticCorrelations(this.selectedAssets, scenario, stressLevel);
-        
-        return market;
-      }
-      
-      // Get base volatility based on stress level
-      getBaseVolatility(stressLevel) {
-        const volatilityMap = {
-          'low': 0.01,
-          'medium': 0.02,
-          'high': 0.04,
-          'extreme': 0.08
-        };
-        return volatilityMap[stressLevel] || 0.02;
-      }
-      
-      // Get scenario multiplier
-      getScenarioMultiplier(scenario) {
-        const multiplierMap = {
-          'normal': 1.0,
-          'volatile': 1.5,
-          'crisis': 2.5,
-          'bubble': 2.0,
-          'trending': 1.2,
-          'sideways': 0.8,
-          'mixed': 1.3
-        };
-        return multiplierMap[scenario] || 1.0;
-      }
-      
-      // Generate chaotic price series with realistic patterns
-      generateChaoticPriceSeries(candles, scenario, stressLevel, startPrice, baseVolatility, scenarioMultiplier) {
-        const prices = [startPrice];
-        let currentPrice = startPrice;
-        
-        // Scenario-specific parameters
-        const scenarioParams = this.getScenarioParameters(scenario, stressLevel);
-        
-        for (let i = 1; i < candles; i++) {
-          let volatility = baseVolatility * scenarioMultiplier;
-          let drift = 0;
-          
-          // Apply scenario-specific patterns
-          if (scenario === 'crisis') {
-            // Crisis: High volatility, negative drift, occasional crashes
-            volatility *= 1 + Math.random() * 2;
-            drift = -0.001 - Math.random() * 0.002;
-            
-            // Random crash events
-            if (Math.random() < 0.01) {
-              currentPrice *= 0.7 + Math.random() * 0.2; // 10-30% crash
-            }
-          } else if (scenario === 'bubble') {
-            // Bubble: Increasing volatility, positive drift, eventual crash
-            volatility *= 1 + (i / candles) * 2;
-            drift = 0.002 + (i / candles) * 0.003;
-            
-            // Bubble burst at 80% of the way
-            if (i > candles * 0.8 && Math.random() < 0.1) {
-              currentPrice *= 0.5 + Math.random() * 0.3; // 20-50% crash
-            }
-          } else if (scenario === 'trending') {
-            // Trending: Low volatility, consistent drift
-            volatility *= 0.8;
-            drift = Math.random() > 0.5 ? 0.001 : -0.001;
-          } else if (scenario === 'sideways') {
-            // Sideways: Low volatility, mean reversion
-            volatility *= 0.6;
-            const meanPrice = startPrice;
-            const reversion = (meanPrice - currentPrice) * 0.001;
-            drift = reversion;
-          } else if (scenario === 'volatile') {
-            // Volatile: High volatility, random drift
-            volatility *= 1.5 + Math.random();
-            drift = (Math.random() - 0.5) * 0.003;
-          }
-          
-          // Generate price change
-          const change = (Math.random() - 0.5) * volatility + drift;
-          currentPrice = Math.max(currentPrice * (1 + change), 0.01);
-          
-          // Apply scenario-specific filters
-          currentPrice = this.applyScenarioFilters(currentPrice, scenario, i, candles);
-          
-          prices.push(currentPrice);
-        }
-        
-        return prices;
-      }
-      
-      // Get scenario-specific parameters
-      getScenarioParameters(scenario, stressLevel) {
-        const params = {
-          'crisis': { crashProbability: 0.01, recoveryTime: 100 },
-          'bubble': { bubbleStrength: 0.8, burstProbability: 0.1 },
-          'trending': { trendStrength: 0.7, reversalProbability: 0.05 },
-          'sideways': { meanReversion: 0.8, breakoutProbability: 0.02 },
-          'volatile': { volatilitySpikes: 0.1, calmPeriods: 0.3 }
-        };
-        
-        return params[scenario] || {};
-      }
-      
-      // Apply scenario-specific filters
-      applyScenarioFilters(price, scenario, index, totalCandles) {
-        if (scenario === 'crisis' && index > totalCandles * 0.7) {
-          // Crisis recovery phase
-          return price * (1 + Math.random() * 0.01);
-        } else if (scenario === 'bubble' && index > totalCandles * 0.9) {
-          // Post-bubble stabilization
-          return price * (1 + (Math.random() - 0.5) * 0.005);
-        }
-        
-        return price;
-      }
-      
-      // Generate chaotic correlations
-      generateChaoticCorrelations(assets, scenario, stressLevel) {
-        const matrix = {};
-        
-        assets.forEach(asset1 => {
-          matrix[asset1] = {};
-          assets.forEach(asset2 => {
-            if (asset1 === asset2) {
-              matrix[asset1][asset2] = 1;
-            } else {
-              let baseCorrelation = this.getRealisticCorrelation(asset1, asset2);
-              
-              // Apply scenario-specific correlation changes
-              if (scenario === 'crisis') {
-                // Crisis: correlations increase (flight to quality)
-                baseCorrelation = Math.min(0.95, baseCorrelation + 0.2);
-              } else if (scenario === 'bubble') {
-                // Bubble: correlations increase (everything goes up)
-                baseCorrelation = Math.min(0.9, baseCorrelation + 0.15);
-              } else if (scenario === 'sideways') {
-                // Sideways: correlations decrease (divergence)
-                baseCorrelation = Math.max(-0.3, baseCorrelation - 0.1);
-              }
-              
-              // Add some randomness based on stress level
-              const randomness = (Math.random() - 0.5) * (stressLevel === 'extreme' ? 0.3 : 0.1);
-              matrix[asset1][asset2] = Math.max(-1, Math.min(1, baseCorrelation + randomness));
-            }
-          });
-        });
-        
-        return matrix;
-      }
-      
-      // Get realistic correlation between assets
-      getRealisticCorrelation(asset1, asset2) {
-        const correlations = {
-          'bitcoin-ethereum': 0.7,
-          'bitcoin-gold': 0.1,
-          'bitcoin-sp500': 0.3,
-          'bitcoin-nasdaq': 0.4,
-          'gold-sp500': -0.1,
-          'gold-nasdaq': -0.15,
-          'sp500-nasdaq': 0.9
-        };
-        
-        const key = `${asset1}-${asset2}`;
-        const reverseKey = `${asset2}-${asset1}`;
-        
-        return correlations[key] || correlations[reverseKey] || (Math.random() - 0.5) * 0.6;
-      }
-      
-      // Execute strategy on specific market data
-      executeStrategyOnMarket(marketData, strategyType, params, fee, initialCapital) {
-        // Temporarily replace current market data
-        const originalMarket = this.marketData;
-        this.marketData = marketData;
-        
-        // Run strategy
-        const results = this.executeStrategy(strategyType, params, fee, initialCapital);
-        
-        // Restore original market data
-        this.marketData = originalMarket;
-        
-        return results;
-      }
-      
-      // Calculate chaos engine summary
-      calculateChaosSummary(results) {
-        const tests = results.tests;
-        
-        if (tests.length === 0) return;
-        
-        // Calculate basic metrics
-        const returns = tests.map(t => t.totalReturn);
-        const drawdowns = tests.map(t => t.maxDrawdown);
-        const sharpes = tests.map(t => t.sharpeRatio);
-        
-        results.summary.avgReturn = returns.reduce((a, b) => a + b, 0) / returns.length;
-        results.summary.avgDrawdown = drawdowns.reduce((a, b) => a + b, 0) / drawdowns.length;
-        results.summary.avgSharpe = sharpes.reduce((a, b) => a + b, 0) / sharpes.length;
-        
-        results.summary.bestReturn = Math.max(...returns);
-        results.summary.worstReturn = Math.min(...returns);
-        results.summary.bestSharpe = Math.max(...sharpes);
-        results.summary.worstDrawdown = Math.max(...drawdowns);
-        
-        // Calculate success rate (profitable tests)
-        const profitableTests = tests.filter(t => t.totalReturn > 0).length;
-        results.summary.successRate = (profitableTests / tests.length) * 100;
-        
-        // Calculate survival rate (tests with drawdown < 50%)
-        const survivingTests = tests.filter(t => t.maxDrawdown < 0.5).length;
-        results.summary.survivalRate = (survivingTests / tests.length) * 100;
-      }
-      
-      // Display chaos engine results
-      displayChaosResults(results) {
-        document.querySelector('.chaos-results').style.display = 'block';
-        
-        // Update summary KPIs
-        document.getElementById('chaosTotalTests').textContent = results.totalTests.toLocaleString();
-        document.getElementById('chaosSuccessRate').textContent = results.summary.successRate.toFixed(1) + '%';
-        document.getElementById('chaosAvgReturn').textContent = results.summary.avgReturn.toFixed(2) + '%';
-        document.getElementById('chaosMaxDD').textContent = (results.summary.avgDrawdown * 100).toFixed(2) + '%';
-        document.getElementById('chaosSharpe').textContent = results.summary.avgSharpe.toFixed(2);
-        document.getElementById('chaosSurvivalRate').textContent = results.summary.survivalRate.toFixed(1) + '%';
-        
-        // Render charts
-        this.renderChaosCharts(results);
-        
-        // Render scenario breakdown
-        this.renderChaosScenarioBreakdown(results);
-        
-        // Render recommendations
-        this.renderChaosRecommendations(results);
-      }
-      
-      // Render chaos engine charts
-      renderChaosCharts(results) {
-        // Return distribution chart
-        this.renderDistributionChart('chaosReturnChart', 
-          results.tests.map(t => t.totalReturn), 
-          'Return Distribution (%)', 
-          'Frequency'
-        );
-        
-        // Drawdown distribution chart
-        this.renderDistributionChart('chaosDrawdownChart', 
-          results.tests.map(t => t.maxDrawdown * 100), 
-          'Max Drawdown (%)', 
-          'Frequency'
-        );
-      }
-      
-      // Render distribution chart
-      renderDistributionChart(canvasId, data, xLabel, yLabel) {
-        const canvas = document.getElementById(canvasId);
-        if (!canvas) return;
-        
-        const ctx = canvas.getContext('2d');
-        const width = canvas.width;
-        const height = canvas.height;
-        
-        ctx.clearRect(0, 0, width, height);
-        
-        // Create histogram
-        const min = Math.min(...data);
-        const max = Math.max(...data);
-        const binCount = 20;
-        const binSize = (max - min) / binCount;
-        
-        const bins = new Array(binCount).fill(0);
-        data.forEach(value => {
-          const binIndex = Math.min(Math.floor((value - min) / binSize), binCount - 1);
-          bins[binIndex]++;
-        });
-        
-        const maxBin = Math.max(...bins);
-        
-        // Draw histogram
-        ctx.fillStyle = '#66e0a3';
-        bins.forEach((count, i) => {
-          const x = (i / binCount) * (width - 40) + 20;
-          const barHeight = (count / maxBin) * (height - 60);
-          const y = height - 20 - barHeight;
-          
-          ctx.fillRect(x, y, (width - 40) / binCount - 2, barHeight);
-        });
-        
-        // Draw labels
-        ctx.fillStyle = '#333';
-        ctx.font = '12px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText(xLabel, width / 2, height - 5);
-      }
-      
-      // Render scenario breakdown
-      renderChaosScenarioBreakdown(results) {
-        const container = document.getElementById('chaosScenarioBreakdown');
-        if (!container) return;
-        
-        container.innerHTML = '';
-        
-        Object.entries(results.scenarioResults).forEach(([scenario, data]) => {
-          if (data.count === 0) return;
-          
-          const avgReturn = data.returns.reduce((a, b) => a + b, 0) / data.returns.length;
-          const avgDrawdown = data.drawdowns.reduce((a, b) => a + b, 0) / data.drawdowns.length;
-          const avgSharpe = data.sharpes.reduce((a, b) => a + b, 0) / data.sharpes.length;
-          
-          const div = document.createElement('div');
-          div.className = 'scenario-item';
-          div.innerHTML = `
-            <h6>${scenario.charAt(0).toUpperCase() + scenario.slice(1)} Markets</h6>
-            <p>Tests: ${data.count} | Avg Return: ${avgReturn.toFixed(2)}% | Avg DD: ${(avgDrawdown * 100).toFixed(2)}% | Avg Sharpe: ${avgSharpe.toFixed(2)}</p>
-          `;
-          
-          container.appendChild(div);
-        });
-      }
-      
-      // Render chaos recommendations
-      renderChaosRecommendations(results) {
-        const container = document.getElementById('chaosRecommendations');
-        if (!container) return;
-        
-        container.innerHTML = '';
-        
-        const recommendations = this.generateChaosRecommendations(results);
-        
-        recommendations.forEach(rec => {
-          const div = document.createElement('div');
-          div.className = `recommendation ${rec.priority}`;
-          div.innerHTML = `
-            <strong>${rec.category}</strong> (${rec.priority} priority)<br>
-            ${rec.message}<br>
-            <em>Action: ${rec.action}</em>
-          `;
-          
-          container.appendChild(div);
-        });
-      }
-      
-      // Generate chaos recommendations
-      generateChaosRecommendations(results) {
-        const recommendations = [];
-        
-        // Success rate analysis
-        if (results.summary.successRate < 40) {
-          recommendations.push({
-            category: 'Strategy Performance',
-            priority: 'high',
-            message: 'Strategy shows poor performance across market scenarios. Consider fundamental changes to the approach.',
-            action: 'Review strategy logic and risk management rules'
-          });
-        } else if (results.summary.successRate < 60) {
-          recommendations.push({
-            category: 'Strategy Performance',
-            priority: 'medium',
-            message: 'Strategy performance is below average. Some optimization may be needed.',
-            action: 'Fine-tune parameters and test additional scenarios'
-          });
-        }
-        
-        // Drawdown analysis
-        if (results.summary.avgDrawdown > 0.3) {
-          recommendations.push({
-            category: 'Risk Management',
-            priority: 'high',
-            message: 'Strategy shows excessive drawdowns. Risk management needs improvement.',
-            action: 'Implement stop-losses and position sizing rules'
-          });
-        }
-        
-        // Scenario analysis
-        const worstScenario = Object.entries(results.scenarioResults)
-          .filter(([_, data]) => data.count > 0)
-          .sort(([_, a], [__, b]) => {
-            const aAvg = a.returns.reduce((sum, r) => sum + r, 0) / a.returns.length;
-            const bAvg = b.returns.reduce((sum, r) => sum + r, 0) / b.returns.length;
-            return aAvg - bAvg;
-          })[0];
-        
-        if (worstScenario) {
-          const [scenario, data] = worstScenario;
-          const avgReturn = data.returns.reduce((a, b) => a + b, 0) / data.returns.length;
-          
-          if (avgReturn < -10) {
-            recommendations.push({
-              category: 'Market Scenario',
-              priority: 'medium',
-              message: `Strategy struggles in ${scenario} markets (avg return: ${avgReturn.toFixed(2)}%).`,
-              action: 'Develop scenario-specific adaptations or avoid trading in these conditions'
-            });
-          }
-        }
-        
-        // Overall assessment
-        if (results.summary.successRate > 70 && results.summary.avgDrawdown < 0.2) {
-          recommendations.push({
-            category: 'Strategy Assessment',
-            priority: 'low',
-            message: 'Strategy shows robust performance across various market conditions.',
-            action: 'Continue monitoring and consider live trading with proper risk management'
-          });
-        }
-        
-        return recommendations;
-      }
-      
-      // Run backtest with selected strategy
-      runBacktest() {
-        if (!this.marketData) {
-          alert('Please generate market data first');
-          return;
-        }
-        
-        console.log('Running backtest...');
-        
-        const strategyType = document.getElementById('strategyType')?.value || 'ma';
-        const fee = parseFloat(document.getElementById('fee')?.value || 0.001);
-        const initialCapital = parseFloat(document.getElementById('initialCapital')?.value || 10000);
-        
-        // Get strategy parameters
-        const params = this.getStrategyParams(strategyType);
-        
-        // Execute backtest
-        const results = this.executeStrategy(strategyType, params, fee, initialCapital);
-        
-        // Display results
-        this.displayBacktestResults(results);
-        
-        console.log('Backtest completed:', results);
-      }
-      
-      // Get strategy parameters based on type
-      getStrategyParams(strategyType) {
-        const params = {};
-        
-        if (strategyType === 'ma') {
-          params.fastMA = parseInt(document.getElementById('param_fastMA')?.value || 10);
-          params.slowMA = parseInt(document.getElementById('param_slowMA')?.value || 30);
-        } else if (strategyType === 'rsi') {
-          params.period = parseInt(document.getElementById('param_period')?.value || 14);
-          params.oversold = 30;
-          params.overbought = 70;
-        }
-        
-        return params;
-      }
-      
-      // Execute trading strategy
-      executeStrategy(strategyType, params, fee, initialCapital) {
-        const results = {
-          trades: [],
-          equity: [initialCapital],
-          positions: {},
-          currentCapital: initialCapital,
-          totalTrades: 0,
-          profitableTrades: 0,
-          totalFees: 0,
-          maxDrawdown: 0,
-          peakCapital: initialCapital
-        };
-        
-        // Initialize positions for each asset
-        this.selectedAssets.forEach(assetKey => {
-          results.positions[assetKey] = 0;
-        });
-        
-        // Execute strategy for each asset
-        this.selectedAssets.forEach(assetKey => {
-          const assetResults = this.executeAssetStrategy(
-            assetKey, 
-            strategyType, 
-            params, 
-            fee, 
-            results
-          );
-          
-          // Merge results
-          results.trades.push(...assetResults.trades);
-          results.totalTrades += assetResults.totalTrades;
-          results.profitableTrades += assetResults.profitableTrades;
-          results.totalFees += assetResults.totalFees;
-        });
-        
-        // Calculate final metrics
-        this.calculateFinalMetrics(results);
-        
-        return results;
-      }
-      
-      // Execute strategy for a single asset
-      executeAssetStrategy(assetKey, strategyType, params, fee, results) {
-        const assetData = this.marketData.assets[assetKey];
-        const prices = assetData.prices;
-        const assetResults = {
-          trades: [],
-          totalTrades: 0,
-          profitableTrades: 0,
-          totalFees: 0
-        };
-        
-        let position = 0;
-        let entryPrice = 0;
-        let entryIndex = 0;
-        
-        for (let i = Math.max(params.fastMA || params.period || 20, 20); i < prices.length; i++) {
-          const currentPrice = prices[i];
-          const signal = this.generateSignal(strategyType, params, prices, i);
-          
-          // Execute signal
-          if (signal === 1 && position <= 0) { // Buy signal
-            if (position < 0) { // Close short position
-              const pnl = (entryPrice - currentPrice) * Math.abs(position);
-              const tradeFee = Math.abs(position) * currentPrice * fee;
-              
-              assetResults.trades.push({
-                type: 'close_short',
-                asset: assetKey,
-                price: currentPrice,
-                quantity: Math.abs(position),
-                pnl: pnl,
-                fee: tradeFee,
-                timestamp: this.marketData.timestamps[i],
-                index: i
-              });
-              
-              results.currentCapital += pnl - tradeFee;
-              results.totalFees += tradeFee;
-              assetResults.totalFees += tradeFee;
-              
-              if (pnl > 0) {
-                results.profitableTrades++;
-                assetResults.profitableTrades++;
-              }
-              assetResults.totalTrades++;
-            }
-            
-            // Open long position
-            const maxQuantity = Math.floor(results.currentCapital * 0.95 / currentPrice);
-            if (maxQuantity > 0) {
-              position = maxQuantity;
-              entryPrice = currentPrice;
-              entryIndex = i;
-              
-              const tradeFee = position * currentPrice * fee;
-              results.currentCapital -= tradeFee;
-              results.totalFees += tradeFee;
-              assetResults.totalFees += tradeFee;
-              
-              assetResults.trades.push({
-                type: 'open_long',
-                asset: assetKey,
-                price: currentPrice,
-                quantity: position,
-                fee: tradeFee,
-                timestamp: this.marketData.timestamps[i],
-                index: i
-              });
-            }
-            
-          } else if (signal === -1 && position >= 0) { // Sell signal
-            if (position > 0) { // Close long position
-              const pnl = (currentPrice - entryPrice) * position;
-              const tradeFee = position * currentPrice * fee;
-              
-              assetResults.trades.push({
-                type: 'close_long',
-                asset: assetKey,
-                price: currentPrice,
-                quantity: position,
-                pnl: pnl,
-                fee: tradeFee,
-                timestamp: this.marketData.timestamps[i],
-                index: i
-              });
-              
-              results.currentCapital += pnl - tradeFee;
-              results.totalFees += tradeFee;
-              assetResults.totalFees += tradeFee;
-              
-              if (pnl > 0) {
-                results.profitableTrades++;
-                assetResults.profitableTrades++;
-              }
-              assetResults.totalTrades++;
-              
-              position = 0;
-            }
-            
-            // Open short position (if we had margin trading)
-            // For simplicity, we'll just track the signal
-          }
-          
-          // Update equity curve
-          let currentEquity = results.currentCapital;
-          if (position !== 0) {
-            const unrealizedPnL = position > 0 ? 
-              (currentPrice - entryPrice) * position : 
-              (entryPrice - currentPrice) * Math.abs(position);
-            currentEquity += unrealizedPnL;
-          }
-          
-          results.equity.push(currentEquity);
-          
-          // Update max drawdown
-          if (currentEquity > results.peakCapital) {
-            results.peakCapital = currentEquity;
-          }
-          const drawdown = (results.peakCapital - currentEquity) / results.peakCapital;
-          if (drawdown > results.maxDrawdown) {
-            results.maxDrawdown = drawdown;
-          }
-        }
-        
-        // Close any remaining positions at the end
-        if (position !== 0) {
-          const finalPrice = prices[prices.length - 1];
-          const pnl = position > 0 ? 
-            (finalPrice - entryPrice) * position : 
-            (entryPrice - finalPrice) * Math.abs(position);
-          const tradeFee = Math.abs(position) * finalPrice * fee;
-          
-          assetResults.trades.push({
-            type: position > 0 ? 'close_long' : 'close_short',
-            asset: assetKey,
-            price: finalPrice,
-            quantity: Math.abs(position),
-            pnl: pnl,
-            fee: tradeFee,
-            timestamp: this.marketData.timestamps[prices.length - 1],
-            index: prices.length - 1
-          });
-          
-          results.currentCapital += pnl - tradeFee;
-          results.totalFees += tradeFee;
-          assetResults.totalFees += tradeFee;
-          
-          if (pnl > 0) {
-            results.profitableTrades++;
-            assetResults.profitableTrades++;
-          }
-          assetResults.totalTrades++;
-        }
-        
-        return assetResults;
-      }
-      
-      // Generate trading signal based on strategy
-      generateSignal(strategyType, params, prices, index) {
-        if (strategyType === 'ma') {
-          return this.generateMASignal(params, prices, index);
-        } else if (strategyType === 'rsi') {
-          return this.generateRSISignal(params, prices, index);
-        }
-        return 0; // No signal
-      }
-      
-      // Generate Moving Average signal
-      generateMASignal(params, prices, index) {
-        const fastMA = this.calculateSMA(prices, params.fastMA, index);
-        const slowMA = this.calculateSMA(prices, params.slowMA, index);
-        
-        if (fastMA > slowMA) {
-          return 1; // Buy signal
-        } else if (fastMA < slowMA) {
-          return -1; // Sell signal
-        }
-        return 0; // No signal
-      }
-      
-      // Generate RSI signal
-      generateRSISignal(params, prices, index) {
-        const rsi = this.calculateRSI(prices, params.period, index);
-        
-        if (rsi < params.oversold) {
-          return 1; // Buy signal (oversold)
-        } else if (rsi > params.overbought) {
-          return -1; // Sell signal (overbought)
-        }
-        return 0; // No signal
-      }
-      
-      // Calculate Simple Moving Average
-      calculateSMA(prices, period, index) {
-        if (index < period - 1) return 0;
-        
-        let sum = 0;
-        for (let i = 0; i < period; i++) {
-          sum += prices[index - i];
-        }
-        return sum / period;
-      }
-      
-      // Calculate RSI
-      calculateRSI(prices, period, index) {
-        if (index < period) return 50;
-        
-        let gains = 0;
-        let losses = 0;
-        
-        for (let i = 1; i <= period; i++) {
-          const change = prices[index - i + 1] - prices[index - i];
-          if (change > 0) {
-            gains += change;
-          } else {
-            losses -= change;
-          }
-        }
-        
-        const avgGain = gains / period;
-        const avgLoss = losses / period;
-        
-        if (avgLoss === 0) return 100;
-        
-        const rs = avgGain / avgLoss;
-        return 100 - (100 / (1 + rs));
-      }
-      
-      // Calculate final performance metrics
-      calculateFinalMetrics(results) {
-        const initialCapital = results.equity[0];
-        const finalCapital = results.equity[results.equity.length - 1];
-        
-        results.totalReturn = ((finalCapital - initialCapital) / initialCapital) * 100;
-        results.totalReturnAbs = finalCapital - initialCapital;
-        results.winRate = results.totalTrades > 0 ? (results.profitableTrades / results.totalTrades) * 100 : 0;
-        results.profitFactor = results.totalTrades > 0 ? 
-          results.profitableTrades / (results.totalTrades - results.profitableTrades) : 0;
-        
-        // Calculate Sharpe ratio (simplified)
-        const returns = [];
-        for (let i = 1; i < results.equity.length; i++) {
-          returns.push((results.equity[i] - results.equity[i-1]) / results.equity[i-1]);
-        }
-        
-        const avgReturn = returns.reduce((a, b) => a + b, 0) / returns.length;
-        const variance = returns.reduce((a, b) => a + Math.pow(b - avgReturn, 2), 0) / returns.length;
-        const stdDev = Math.sqrt(variance);
-        
-        results.sharpeRatio = stdDev > 0 ? avgReturn / stdDev : 0;
-        results.volatility = stdDev * Math.sqrt(252) * 100; // Annualized
-      }
-      
-      // Display backtest results
-      displayBacktestResults(results) {
-        // Update KPI displays
-        document.getElementById('kpiTrades').textContent = results.totalTrades;
-        document.getElementById('kpiRet').textContent = results.totalReturn.toFixed(2) + '%';
-        document.getElementById('kpiDD').textContent = (results.maxDrawdown * 100).toFixed(2) + '%';
-        document.getElementById('kpiSharpe').textContent = results.sharpeRatio.toFixed(2);
-        
-        // Render equity chart
-        this.renderEquityChart(results);
-        
-        // Render trade analysis
-        this.renderTradeAnalysis(results);
-      }
-      
-      // Render equity curve chart
-      renderEquityChart(results) {
-        const canvas = document.getElementById('chartEquity');
-        if (!canvas || !results) return;
-        
-        const ctx = canvas.getContext('2d');
-        const width = canvas.width;
-        const height = canvas.height;
-        
-        ctx.clearRect(0, 0, width, height);
-        
-        const equity = results.equity;
-        const minEquity = Math.min(...equity);
-        const maxEquity = Math.max(...equity);
-        
-        ctx.strokeStyle = '#66e0a3';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        
-        equity.forEach((value, i) => {
-          const x = (i / (equity.length - 1)) * (width - 40) + 20;
-          const y = height - 20 - ((value - minEquity) / (maxEquity - minEquity)) * (height - 40);
-          
-          if (i === 0) {
-            ctx.moveTo(x, y);
-          } else {
-            ctx.lineTo(x, y);
-          }
-        });
-        
-        ctx.stroke();
-      }
-      
-      // Render trade analysis
-      renderTradeAnalysis(results) {
-        const container = document.getElementById('tradeAnalysis');
-        if (!container || !results) return;
-        
-        container.innerHTML = '';
-        
-        if (results.totalTrades === 0) {
-          container.innerHTML = '<p>No trades executed</p>';
-          return;
-        }
-        
-        // Trade summary
-        const summary = document.createElement('div');
-        summary.className = 'trade-summary';
-        
-        summary.innerHTML = `
-          <h4>Trade Summary</h4>
-          <p>Total Trades: ${results.totalTrades}</p>
-          <p>Profitable: ${results.profitableTrades}</p>
-          <p>Win Rate: ${results.winRate.toFixed(1)}%</p>
-          <p>Total Fees: $${results.totalFees.toFixed(2)}</p>
-          <p>Total Return: ${results.totalReturn.toFixed(2)}%</p>
-          <p>Max Drawdown: ${(results.maxDrawdown * 100).toFixed(2)}%</p>
-          <p>Sharpe Ratio: ${results.sharpeRatio.toFixed(2)}</p>
-        `;
-        
-        container.appendChild(summary);
-        
-        // Recent trades table
-        const table = document.createElement('table');
-        table.className = 'trades-table';
-        
-        const headerRow = document.createElement('tr');
-        ['Date', 'Asset', 'Type', 'Price', 'Quantity', 'PnL', 'Fee'].forEach(header => {
-          headerRow.appendChild(document.createElement('th')).textContent = header;
-        });
-        table.appendChild(headerRow);
-        
-        // Show last 10 trades
-        const recentTrades = results.trades.slice(-10).reverse();
-        recentTrades.forEach(trade => {
-          const row = document.createElement('tr');
-          
-          const date = new Date(trade.timestamp);
-          row.appendChild(document.createElement('td')).textContent = date.toLocaleDateString();
-          row.appendChild(document.createElement('td')).textContent = this.assets[trade.asset]?.symbol || trade.asset;
-          row.appendChild(document.createElement('td')).textContent = trade.type.replace('_', ' ').toUpperCase();
-          row.appendChild(document.createElement('td')).textContent = '$' + trade.price.toFixed(2);
-          row.appendChild(document.createElement('td')).textContent = trade.quantity;
-          
-          const pnlCell = document.createElement('td');
-          if (trade.pnl !== undefined) {
-            pnlCell.textContent = '$' + trade.pnl.toFixed(2);
-            pnlCell.style.color = trade.pnl >= 0 ? '#66e0a3' : '#ff6b6b';
-          } else {
-            pnlCell.textContent = '—';
-          }
-          row.appendChild(pnlCell);
-          
-          row.appendChild(document.createElement('td')).textContent = '$' + trade.fee.toFixed(2);
-          table.appendChild(row);
-        });
-        
-        container.appendChild(table);
-      }
-      
-      // Reset strategy and results
-      resetStrategy() {
-        // Reset KPI displays
-        document.getElementById('kpiTrades').textContent = '0';
-        document.getElementById('kpiRet').textContent = '—';
-        document.getElementById('kpiDD').textContent = '—';
-        document.getElementById('kpiSharpe').textContent = '—';
-        
-        // Clear charts
-        const equityCanvas = document.getElementById('chartEquity');
-        if (equityCanvas) {
-          const ctx = equityCanvas.getContext('2d');
-          ctx.clearRect(0, 0, equityCanvas.width, equityCanvas.height);
-        }
-        
-        // Clear trade analysis
-        const tradeContainer = document.getElementById('tradeAnalysis');
-        if (tradeContainer) {
-          tradeContainer.innerHTML = '';
-        }
-        
-        // Reset strategy parameters to defaults
-        const strategyType = document.getElementById('strategyType')?.value || 'ma';
-        if (strategyType === 'ma') {
-          document.getElementById('param_fastMA').value = '10';
-          document.getElementById('param_slowMA').value = '30';
-        } else if (strategyType === 'rsi') {
-          document.getElementById('param_period').value = '14';
-        }
-      }
+                for (let i = 0; i < days; i++) {
+                    // Random walk with trend and volatility
+                    const randomFactor = (Math.random() - 0.5) * 2;
+                    const dailyChange = (this.trend + randomFactor * this.volatility) * currentPrice;
+                    currentPrice += dailyChange;
+                    
+                    // Add some realistic bounds
+                    currentPrice = Math.max(2000, Math.min(5000, currentPrice));
+                    prices.push(currentPrice);
+                }
 
-      // New methods for enhanced functionality
-      deployStrategy() {
-        if (!this.marketData) {
-          alert('Please generate market data first');
-          return;
-        }
-        
-        const strategyType = document.getElementById('strategyType')?.value || 'ma';
-        const params = this.getStrategyParams(strategyType);
-        
-        console.log('🚀 Deploying strategy:', { type: strategyType, params });
-        
-        // Simulate strategy deployment
-        this.currentStep = 2;
-        this.updateSuccessFlow();
-        
-        // Show deployment success
-        this.showDeploymentSuccess();
-      }
-      
-      saveStrategy() {
-        const strategyType = document.getElementById('strategyType')?.value || 'ma';
-        const params = this.getStrategyParams(strategyType);
-        
-        const strategyData = {
-          type: strategyType,
-          params: params,
-          timestamp: new Date().toISOString(),
-          assets: this.selectedAssets
-        };
-        
-        // Save to localStorage
-        const savedStrategies = JSON.parse(localStorage.getItem('savedStrategies') || '[]');
-        savedStrategies.push(strategyData);
-        localStorage.setItem('savedStrategies', JSON.stringify(savedStrategies));
-        
-        alert('Strategy saved successfully!');
-        console.log('💾 Strategy saved:', strategyData);
-      }
-      
-      analyzeStrategy() {
-        if (!this.marketData) {
-          alert('Please generate market data first');
-          return;
-        }
-        
-        console.log('📊 Analyzing strategy...');
-        
-        // Simulate analysis
-        this.currentStep = 3;
-        this.updateSuccessFlow();
-        
-        // Show analysis results
-        this.showAnalysisResults();
-      }
-      
-      optimizeStrategy() {
-        if (!this.marketData) {
-          alert('Please generate market data first');
-          return;
-        }
-        
-        console.log('⚙️ Optimizing strategy parameters...');
-        
-        // Simulate optimization
-        this.currentStep = 4;
-        this.updateSuccessFlow();
-        
-        // Show optimization results
-        this.showOptimizationResults();
-      }
-      
-      showDeploymentSuccess() {
-        // Create and show a success notification
-        const notification = document.createElement('div');
-        notification.className = 'notification success';
-        notification.innerHTML = `
-          <span class="notification-icon">✅</span>
-          <span class="notification-text">Strategy deployed successfully!</span>
-        `;
-        
-        document.body.appendChild(notification);
-        
-        // Remove after 3 seconds
-        setTimeout(() => {
-          notification.remove();
-        }, 3000);
-      }
-      
-      showAnalysisResults() {
-        // Create and show analysis results
-        const notification = document.createElement('div');
-        notification.className = 'notification info';
-        notification.innerHTML = `
-          <span class="notification-icon">📊</span>
-          <span class="notification-text">Strategy analysis complete! Check the results above.</span>
-        `;
-        
-        document.body.appendChild(notification);
-        
-        // Remove after 5 seconds
-        setTimeout(() => {
-          notification.remove();
-        }, 5000);
-      }
-      
-      showOptimizationResults() {
-        // Create and show optimization results
-        const notification = document.createElement('div');
-        notification.className = 'notification success';
-        notification.innerHTML = `
-          <span class="notification-icon">⚙️</span>
-          <span class="notification-text">Strategy optimization complete! Parameters have been updated.</span>
-        `;
-        
-        document.body.appendChild(notification);
-        
-        // Remove after 5 seconds
-        setTimeout(() => {
-          notification.remove();
-        }, 5000);
-      }
-      
-      handleCPAClick() {
-        // Handle CPA link click
-        console.log('🎯 CPA link clicked');
-        alert('CPA rates and special offers will be displayed here. This would typically redirect to your broker partner\'s CPA program.');
-      }
-      
-      handleRebatesClick() {
-        // Handle rebates link click
-        console.log('💸 Rebates link clicked');
-        alert('Rebate program details will be displayed here. This would typically show your broker partner\'s rebate structure.');
-      }
-      
-      // Get strategy parameters based on type
-      getStrategyParams(strategyType) {
-        const params = {};
-        
-        if (strategyType === 'ma') {
-          params.fastMA = parseInt(document.getElementById('param_fastMA')?.value || 10);
-          params.slowMA = parseInt(document.getElementById('param_slowMA')?.value || 30);
-        } else if (strategyType === 'rsi') {
-          params.period = parseInt(document.getElementById('param_period')?.value || 14);
-          params.oversold = 30;
-          params.overbought = 70;
-        }
-        
-        return params;
-      }
-      
-      // Execute trading strategy
-      executeStrategy(strategyType, params, fee, initialCapital) {
-        const results = {
-          trades: [],
-          equity: [initialCapital],
-          positions: {},
-          currentCapital: initialCapital,
-          totalTrades: 0,
-          profitableTrades: 0,
-          totalFees: 0,
-          maxDrawdown: 0,
-          peakCapital: initialCapital
-        };
-        
-        // Initialize positions for each asset
-        this.selectedAssets.forEach(assetKey => {
-          results.positions[assetKey] = 0;
-        });
-        
-        // Execute strategy for each asset
-        this.selectedAssets.forEach(assetKey => {
-          const assetResults = this.executeAssetStrategy(
-            assetKey, 
-            strategyType, 
-            params, 
-            fee, 
-            results
-          );
-          
-          // Merge results
-          results.trades.push(...assetResults.trades);
-          results.totalTrades += assetResults.totalTrades;
-          results.profitableTrades += assetResults.profitableTrades;
-          results.totalFees += assetResults.totalFees;
-        });
-        
-        // Calculate final metrics
-        this.calculateFinalMetrics(results);
-        
-        return results;
-      }
-      
-      // Execute strategy for a single asset
-      executeAssetStrategy(assetKey, strategyType, params, fee, results) {
-        const assetData = this.marketData.assets[assetKey];
-        const prices = assetData.prices;
-        const assetResults = {
-          trades: [],
-          totalTrades: 0,
-          profitableTrades: 0,
-          totalFees: 0
-        };
-        
-        let position = 0;
-        let entryPrice = 0;
-        let entryIndex = 0;
-        
-        for (let i = Math.max(params.fastMA || params.period || 20, 20); i < prices.length; i++) {
-          const currentPrice = prices[i];
-          const signal = this.generateSignal(strategyType, params, prices, i);
-          
-          // Execute signal
-          if (signal === 1 && position <= 0) { // Buy signal
-            if (position < 0) { // Close short position
-              const pnl = (entryPrice - currentPrice) * Math.abs(position);
-              const tradeFee = Math.abs(position) * currentPrice * fee;
-              
-              assetResults.trades.push({
-                type: 'close_short',
-                asset: assetKey,
-                price: currentPrice,
-                quantity: Math.abs(position),
-                pnl: pnl,
-                fee: tradeFee,
-                timestamp: this.marketData.timestamps[i],
-                index: i
-              });
-              
-              results.currentCapital += pnl - tradeFee;
-              results.totalFees += tradeFee;
-              assetResults.totalFees += tradeFee;
-              
-              if (pnl > 0) {
-                results.profitableTrades++;
-                assetResults.profitableTrades++;
-              }
-              assetResults.totalTrades++;
+                return prices;
             }
-            
-            // Open long position
-            const maxQuantity = Math.floor(results.currentCapital * 0.95 / currentPrice);
-            if (maxQuantity > 0) {
-              position = maxQuantity;
-              entryPrice = currentPrice;
-              entryIndex = i;
-              
-              const tradeFee = position * currentPrice * fee;
-              results.currentCapital -= tradeFee;
-              results.totalFees += tradeFee;
-              assetResults.totalFees += tradeFee;
-              
-              assetResults.trades.push({
-                type: 'open_long',
-                asset: assetKey,
-                price: currentPrice,
-                quantity: position,
-                fee: tradeFee,
-                timestamp: this.marketData.timestamps[i],
-                index: i
-              });
+
+            // Check if trade hits TP or SL
+            evaluateStrategy(direction, entryPrice, takeProfit, stopLoss, lotSize, timeframe) {
+                const prices = this.simulatePrice(timeframe);
+                let result = 'TIMEOUT';
+                let finalPrice = prices[prices.length - 1];
+                let exitPrice = finalPrice;
+                let daysElapsed = timeframe;
+
+                // Check each day for TP/SL hits
+                for (let i = 1; i < prices.length; i++) {
+                    const price = prices[i];
+                    
+                    if (direction === 'buy') {
+                        if (price >= takeProfit) {
+                            result = 'TAKE_PROFIT';
+                            exitPrice = takeProfit;
+                            daysElapsed = i;
+                            break;
+                        } else if (price <= stopLoss) {
+                            result = 'STOP_LOSS';
+                            exitPrice = stopLoss;
+                            daysElapsed = i;
+                            break;
+                        }
+                    } else { // sell
+                        if (price <= takeProfit) {
+                            result = 'TAKE_PROFIT';
+                            exitPrice = takeProfit;
+                            daysElapsed = i;
+                            break;
+                        } else if (price >= stopLoss) {
+                            result = 'STOP_LOSS';
+                            exitPrice = stopLoss;
+                            daysElapsed = i;
+                            break;
+                        }
+                    }
+                }
+
+                // Calculate P&L
+                let profitLoss;
+                if (direction === 'buy') {
+                    profitLoss = (exitPrice - entryPrice) * lotSize;
+                } else {
+                    profitLoss = (entryPrice - exitPrice) * lotSize;
+                }
+
+                const investment = entryPrice * lotSize;
+                const roi = (profitLoss / investment) * 100;
+
+                return {
+                    result,
+                    profitLoss,
+                    roi,
+                    finalPrice: exitPrice,
+                    daysElapsed,
+                    prices
+                };
             }
+        }
+
+        const simulator = new GoldMarketSimulator();
+
+        // Update price display with animation
+        function updatePriceDisplay() {
+            const change = (Math.random() - 0.5) * 20; // Random change ±$10
+            const newPrice = 3600 + change;
+            const changePercent = (change / 3600) * 100;
+
+            document.getElementById('currentPrice').textContent = `$${newPrice.toFixed(2)}`;
+            document.getElementById('changeAmount').textContent = change >= 0 ? `+$${change.toFixed(2)}` : `-$${Math.abs(change).toFixed(2)}`;
+            document.getElementById('changePercent').textContent = change >= 0 ? `+${changePercent.toFixed(2)}%` : `${changePercent.toFixed(2)}%`;
             
-          } else if (signal === -1 && position >= 0) { // Sell signal
-            if (position > 0) { // Close long position
-              const pnl = (currentPrice - entryPrice) * position;
-              const tradeFee = position * currentPrice * fee;
-              
-              assetResults.trades.push({
-                type: 'close_long',
-                asset: assetKey,
-                price: currentPrice,
-                quantity: position,
-                pnl: pnl,
-                fee: tradeFee,
-                timestamp: this.marketData.timestamps[i],
-                index: i
-              });
-              
-              results.currentCapital += pnl - tradeFee;
-              results.totalFees += tradeFee;
-              assetResults.totalFees += tradeFee;
-              
-              if (pnl > 0) {
-                results.profitableTrades++;
-                assetResults.profitableTrades++;
-              }
-              assetResults.totalTrades++;
-              
-              position = 0;
+            const priceChangeEl = document.getElementById('priceChange');
+            priceChangeEl.className = change >= 0 ? 'price-up' : 'price-down';
+        }
+
+        // Run simulation
+        async function runSimulation() {
+            const direction = document.getElementById('tradeDirection').value;
+            const entryPrice = parseFloat(document.getElementById('entryPrice').value);
+            const takeProfit = parseFloat(document.getElementById('takeProfit').value);
+            const stopLoss = parseFloat(document.getElementById('stopLoss').value);
+            const lotSize = parseFloat(document.getElementById('lotSize').value);
+            const timeframe = parseInt(document.getElementById('timeframe').value);
+
+            // Validation
+            if (!entryPrice || !takeProfit || !stopLoss || !lotSize || !timeframe) {
+                alert('Por favor completa todos los campos');
+                return;
             }
-          }
-          
-          // Update equity curve
-          let currentEquity = results.currentCapital;
-          if (position !== 0) {
-            const unrealizedPnL = position > 0 ? 
-              (currentPrice - entryPrice) * position : 
-              (entryPrice - currentPrice) * Math.abs(position);
-            currentEquity += unrealizedPnL;
-          }
-          
-          results.equity.push(currentEquity);
-          
-          // Update max drawdown
-          if (currentEquity > results.peakCapital) {
-            results.peakCapital = currentEquity;
-          }
-          const drawdown = (results.peakCapital - currentEquity) / results.peakCapital;
-          if (drawdown > results.maxDrawdown) {
-            results.maxDrawdown = drawdown;
-          }
-        }
-        
-        // Close any remaining positions at the end
-        if (position !== 0) {
-          const finalPrice = prices[prices.length - 1];
-          const pnl = position > 0 ? 
-            (finalPrice - entryPrice) * position : 
-            (entryPrice - finalPrice) * Math.abs(position);
-          const tradeFee = Math.abs(position) * finalPrice * fee;
-          
-          assetResults.trades.push({
-            type: position > 0 ? 'close_long' : 'close_short',
-            asset: assetKey,
-            price: finalPrice,
-            quantity: Math.abs(position),
-            pnl: pnl,
-            fee: tradeFee,
-            timestamp: this.marketData.timestamps[prices.length - 1],
-            index: prices.length - 1
-          });
-          
-          results.currentCapital += pnl - tradeFee;
-          results.totalFees += tradeFee;
-          assetResults.totalFees += tradeFee;
-          
-          if (pnl > 0) {
-            results.profitableTrades++;
-            assetResults.profitableTrades++;
-          }
-          assetResults.totalTrades++;
-        }
-        
-        return assetResults;
-      }
-      
-      // Generate trading signal based on strategy
-      generateSignal(strategyType, params, prices, index) {
-        if (strategyType === 'ma') {
-          return this.generateMASignal(params, prices, index);
-        } else if (strategyType === 'rsi') {
-          return this.generateRSISignal(params, prices, index);
-        }
-        return 0; // No signal
-      }
-      
-      // Generate Moving Average signal
-      generateMASignal(params, prices, index) {
-        const fastMA = this.calculateSMA(prices, params.fastMA, index);
-        const slowMA = this.calculateSMA(prices, params.slowMA, index);
-        
-        if (fastMA > slowMA) {
-          return 1; // Buy signal
-        } else if (fastMA < slowMA) {
-          return -1; // Sell signal
-        }
-        return 0; // No signal
-      }
-      
-      // Generate RSI signal
-      generateRSISignal(params, prices, index) {
-        const rsi = this.calculateRSI(prices, params.period, index);
-        
-        if (rsi < params.oversold) {
-          return 1; // Buy signal (oversold)
-        } else if (rsi > params.overbought) {
-          return -1; // Sell signal (overbought)
-        }
-        return 0; // No signal
-      }
-      
-      // Calculate Simple Moving Average
-      calculateSMA(prices, period, index) {
-        if (index < period - 1) return 0;
-        
-        let sum = 0;
-        for (let i = 0; i < period; i++) {
-          sum += prices[index - i];
-        }
-        return sum / period;
-      }
-      
-      // Calculate RSI
-      calculateRSI(prices, period, index) {
-        if (index < period) return 50;
-        
-        let gains = 0;
-        let losses = 0;
-        
-        for (let i = 1; i <= period; i++) {
-          const change = prices[index - i + 1] - prices[index - i];
-          if (change > 0) {
-            gains += change;
-          } else {
-            losses -= change;
-          }
-        }
-        
-        const avgGain = gains / period;
-        const avgLoss = losses / period;
-        
-        if (avgLoss === 0) return 100;
-        
-        const rs = avgGain / avgLoss;
-        return 100 - (100 / (1 + rs));
-      }
-      
-      // Calculate final performance metrics
-      calculateFinalMetrics(results) {
-        const initialCapital = results.equity[0];
-        const finalCapital = results.equity[results.equity.length - 1];
-        
-        results.totalReturn = ((finalCapital - initialCapital) / initialCapital) * 100;
-        results.totalReturnAbs = finalCapital - initialCapital;
-        results.winRate = results.totalTrades > 0 ? (results.profitableTrades / results.totalTrades) * 100 : 0;
-        results.profitFactor = results.totalTrades > 0 ? 
-          results.profitableTrades / (results.totalTrades - results.profitableTrades) : 0;
-        
-        // Calculate Sharpe ratio (simplified)
-        const returns = [];
-        for (let i = 1; i < results.equity.length; i++) {
-          returns.push((results.equity[i] - results.equity[i-1]) / results.equity[i-1]);
-        }
-        
-        const avgReturn = returns.reduce((a, b) => a + b, 0) / returns.length;
-        const variance = returns.reduce((a, b) => a + Math.pow(b - avgReturn, 2), 0) / returns.length;
-        const stdDev = Math.sqrt(variance);
-        
-        results.sharpeRatio = stdDev > 0 ? avgReturn / stdDev : 0;
-        results.volatility = stdDev * Math.sqrt(252) * 100; // Annualized
-      }
-      
-      // Display backtest results
-      displayBacktestResults(results) {
-        // Update KPI displays
-        document.getElementById('kpiTrades').textContent = results.totalTrades;
-        document.getElementById('kpiRet').textContent = results.totalReturn.toFixed(2) + '%';
-        document.getElementById('kpiDD').textContent = (results.maxDrawdown * 100).toFixed(2) + '%';
-        document.getElementById('kpiSharpe').textContent = results.sharpeRatio.toFixed(2);
-        
-        // Render equity chart
-        this.renderEquityChart(results);
-        
-        // Render trade analysis
-        this.renderTradeAnalysis(results);
-      }
-      
-      // Render equity curve chart
-      renderEquityChart(results) {
-        const canvas = document.getElementById('chartEquity');
-        if (!canvas || !results) return;
-        
-        const ctx = canvas.getContext('2d');
-        const width = canvas.width;
-        const height = canvas.height;
-        
-        ctx.clearRect(0, 0, width, height);
-        
-        const equity = results.equity;
-        const minEquity = Math.min(...equity);
-        const maxEquity = Math.max(...equity);
-        
-        ctx.strokeStyle = '#66e0a3';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        
-        equity.forEach((value, i) => {
-          const x = (i / (equity.length - 1)) * (width - 40) + 20;
-          const y = height - 20 - ((value - minEquity) / (maxEquity - minEquity)) * (height - 40);
-          
-          if (i === 0) {
-            ctx.moveTo(x, y);
-          } else {
-            ctx.lineTo(x, y);
-          }
-        });
-        
-        ctx.stroke();
-      }
-      
-      // Render trade analysis
-      renderTradeAnalysis(results) {
-        const container = document.getElementById('tradeAnalysis');
-        if (!container || !results) return;
-        
-        container.innerHTML = '';
-        
-        if (results.totalTrades === 0) {
-          container.innerHTML = '<p>No trades executed</p>';
-          return;
-        }
-        
-        // Trade summary
-        const summary = document.createElement('div');
-        summary.className = 'trade-summary';
-        
-        summary.innerHTML = `
-          <h4>Trade Summary</h4>
-          <p>Total Trades: ${results.totalTrades}</p>
-          <p>Profitable: ${results.profitableTrades}</p>
-          <p>Win Rate: ${results.winRate.toFixed(1)}%</p>
-          <p>Total Fees: $${results.totalFees.toFixed(2)}</p>
-          <p>Total Return: ${results.totalReturn.toFixed(2)}%</p>
-          <p>Max Drawdown: ${(results.maxDrawdown * 100).toFixed(2)}%</p>
-              <p>Sharpe Ratio: ${results.sharpeRatio.toFixed(2)}</p>
-        `;
-        
-        container.appendChild(summary);
-        
-        // Recent trades table
-        const table = document.createElement('table');
-        table.className = 'trades-table';
-        
-        const headerRow = document.createElement('tr');
-        ['Date', 'Asset', 'Type', 'Price', 'Quantity', 'PnL', 'Fee'].forEach(header => {
-          headerRow.appendChild(document.createElement('th')).textContent = header;
-        });
-        table.appendChild(headerRow);
-        
-        // Show last 10 trades
-        const recentTrades = results.trades.slice(-10).reverse();
-        recentTrades.forEach(trade => {
-          const row = document.createElement('tr');
-          
-          const date = new Date(trade.timestamp);
-          row.appendChild(document.createElement('td')).textContent = date.toLocaleDateString();
-          row.appendChild(document.createElement('td')).textContent = this.assets[trade.asset]?.symbol || trade.asset;
-          row.appendChild(document.createElement('td')).textContent = trade.type.replace('_', ' ').toUpperCase();
-          row.appendChild(document.createElement('td')).textContent = '$' + trade.price.toFixed(2);
-          row.appendChild(document.createElement('td')).textContent = trade.quantity;
-          
-          const pnlCell = document.createElement('td');
-          if (trade.pnl !== undefined) {
-            pnlCell.textContent = '$' + trade.pnl.toFixed(2);
-            pnlCell.style.color = trade.pnl >= 0 ? '#66e0a3' : '#ff6b6b';
-          } else {
-            pnlCell.textContent = '—';
-          }
-          row.appendChild(pnlCell);
-          
-          row.appendChild(document.createElement('td')).textContent = '$' + trade.fee.toFixed(2);
-          table.appendChild(row);
-        });
-        
-        container.appendChild(table);
-      }
-      
-      // Reset strategy and results
-      resetStrategy() {
-        // Reset KPI displays
-        document.getElementById('kpiTrades').textContent = '0';
-        document.getElementById('kpiRet').textContent = '—';
-        document.getElementById('kpiDD').textContent = '—';
-        document.getElementById('kpiSharpe').textContent = '—';
-        
-        // Clear charts
-        const equityCanvas = document.getElementById('chartEquity');
-        if (equityCanvas) {
-          const ctx = equityCanvas.getContext('2d');
-          ctx.clearRect(0, 0, equityCanvas.width, equityCanvas.height);
-        }
-        
-        // Clear trade analysis
-        const tradeContainer = document.getElementById('tradeAnalysis');
-        if (tradeContainer) {
-          tradeContainer.innerHTML = '';
-        }
-        
-        // Reset strategy parameters to defaults
-        const strategyType = document.getElementById('strategyType')?.value || 'ma';
-        if (strategyType === 'ma') {
-          document.getElementById('param_fastMA').value = '10';
-          document.getElementById('param_slowMA').value = '30';
-        } else if (strategyType === 'rsi') {
-          document.getElementById('param_period').value = '14';
-        }
-      }
-      
-      // Run backtest with selected strategy
-      runBacktest() {
-        if (!this.marketData) {
-          alert('Please generate market data first');
-          return;
-        }
-        
-        console.log('Running backtest...');
-        
-        const strategyType = document.getElementById('strategyType')?.value || 'ma';
-        const fee = parseFloat(document.getElementById('fee')?.value || 0.001);
-        const initialCapital = parseFloat(document.getElementById('initialCapital')?.value || 10000);
-        
-        // Get strategy parameters
-        const params = this.getStrategyParams(strategyType);
-        
-        // Execute backtest
-        const results = this.executeStrategy(strategyType, params, fee, initialCapital);
-        
-        // Display results
-        this.displayBacktestResults(results);
-        
-        console.log('Backtest completed:', results);
-      }
-      
-      // 🌀 Chaos Engine - Mass Strategy Testing
-      async launchChaosEngine() {
-        if (!this.marketData) {
-          alert('Please generate market data first');
-          return;
-        }
-        
-        const iterations = parseFloat(document.getElementById('chaosIterations').value);
-        const scenario = document.getElementById('chaosScenarios').value;
-        const stressLevel = document.getElementById('chaosStressLevel').value;
-        
-        if (iterations <= 0) {
-          alert('Please enter a valid number of iterations');
-          return;
-        }
-        
-        const totalTests = Math.floor(iterations * 1000000); // Convert to actual number
-        console.log(`🚀 Launching Chaos Engine: ${totalTests.toLocaleString()} tests`);
-        
-        // Show progress
-        this.showChaosProgress();
-        
-        // Get current strategy configuration
-        const strategyType = document.getElementById('strategyType')?.value || 'ma';
-        const params = this.getStrategyParams(strategyType);
-        const fee = parseFloat(document.getElementById('fee')?.value || 0.001);
-        const initialCapital = parseFloat(document.getElementById('initialCapital')?.value || 10000);
-        
-        // Run chaos engine
-        const results = await this.runChaosEngine(totalTests, scenario, stressLevel, strategyType, params, fee, initialCapital);
-        
-        // Display results
-        this.displayChaosResults(results);
-        
-        console.log('🌀 Chaos Engine completed:', results);
-      }
-      
-      // Show chaos engine progress
-      showChaosProgress() {
-        document.querySelector('.chaos-progress').style.display = 'block';
-        document.querySelector('.chaos-results').style.display = 'none';
-        document.getElementById('btnChaosEngine').disabled = true;
-        document.getElementById('btnChaosEngine').textContent = '🔄 Running...';
-      }
-      
-      // Hide chaos engine progress
-      hideChaosProgress() {
-        document.querySelector('.chaos-progress').style.display = 'none';
-        document.getElementById('btnChaosEngine').disabled = false;
-        document.getElementById('btnChaosEngine').textContent = '🚀 Launch Chaos Engine';
-      }
-      
-      // Update chaos engine progress
-      updateChaosProgress(current, total) {
-        const percentage = (current / total) * 100;
-        document.getElementById('chaosProgressFill').style.width = percentage + '%';
-        document.getElementById('chaosProgressText').textContent = percentage.toFixed(1) + '% Complete';
-        document.getElementById('chaosTestsCompleted').textContent = current.toLocaleString() + ' tests completed';
-      }
-      
-      // Run chaos engine with mass testing
-      async runChaosEngine(totalTests, scenario, stressLevel, strategyType, params, fee, initialCapital) {
-        const results = {
-          totalTests: totalTests,
-          tests: [],
-          scenarioResults: {},
-          summary: {
-            successRate: 0,
-            avgReturn: 0,
-            avgDrawdown: 0,
-            avgSharpe: 0,
-            survivalRate: 0,
-            bestReturn: -Infinity,
-            worstReturn: Infinity,
-            bestSharpe: -Infinity,
-            worstDrawdown: 0
-          }
-        };
-        
-        // Initialize scenario tracking
-        const scenarios = ['normal', 'volatile', 'crisis', 'bubble', 'trending', 'sideways'];
-        scenarios.forEach(s => {
-          results.scenarioResults[s] = { count: 0, returns: [], drawdowns: [], sharpes: [] };
-        });
-        
-        // Run tests in batches for performance
-        const batchSize = Math.min(1000, Math.ceil(totalTests / 100));
-        let completedTests = 0;
-        
-        for (let batch = 0; batch < totalTests; batch += batchSize) {
-          const currentBatchSize = Math.min(batchSize, totalTests - batch);
-          
-          // Process batch
-          for (let i = 0; i < currentBatchSize; i++) {
-            const testResult = this.runSingleChaosTest(scenario, stressLevel, strategyType, params, fee, initialCapital);
-            
-            results.tests.push(testResult);
-            
-            // Track scenario performance
-            const testScenario = testResult.scenario;
-            if (results.scenarioResults[testScenario]) {
-              results.scenarioResults[testScenario].count++;
-              results.scenarioResults[testScenario].returns.push(testResult.totalReturn);
-              results.scenarioResults[testScenario].drawdowns.push(testResult.maxDrawdown);
-              results.scenarioResults[testScenario].sharpes.push(testResult.sharpeRatio);
+
+            if (direction === 'buy' && takeProfit <= entryPrice) {
+                alert('Para compras, el Take Profit debe ser mayor al precio de entrada');
+                return;
             }
-            
-            completedTests++;
-            
-            // Update progress every 100 tests
-            if (completedTests % 100 === 0) {
-              this.updateChaosProgress(completedTests, totalTests);
-              // Allow UI to update
-              await new Promise(resolve => setTimeout(resolve, 0));
+
+            if (direction === 'buy' && stopLoss >= entryPrice) {
+                alert('Para compras, el Stop Loss debe ser menor al precio de entrada');
+                return;
             }
-          }
-        }
-        
-        // Calculate final summary
-        this.calculateChaosSummary(results);
-        
-        // Hide progress
-        this.hideChaosProgress();
-        
-        return results;
-      }
-      
-      // Run single chaos test
-      runSingleChaosTest(scenario, stressLevel, strategyType, params, fee, initialCapital) {
-        // Generate chaotic market data
-        const chaoticMarket = this.generateChaoticMarket(scenario, stressLevel);
-        
-        // Run backtest on chaotic market
-        const results = this.executeStrategyOnMarket(chaoticMarket, strategyType, params, fee, initialCapital);
-        
-        // Add scenario information
-        results.scenario = scenario;
-        results.stressLevel = stressLevel;
-        
-        return results;
-      }
-      
-      // Generate chaotic market with realistic patterns
-      generateChaoticMarket(scenario, stressLevel) {
-        const candles = 1000;
-        const baseVolatility = this.getBaseVolatility(stressLevel);
-        const scenarioMultiplier = this.getScenarioMultiplier(scenario);
-        
-        const market = {
-          assets: {},
-          timestamps: [],
-          correlationMatrix: {}
-        };
-        
-        // Generate timestamps
-        for (let i = 0; i < candles; i++) {
-          market.timestamps.push(Date.now() - (candles - i - 1) * 24 * 60 * 60 * 1000);
-        }
-        
-        // Generate assets with chaotic patterns
-        this.selectedAssets.forEach(assetKey => {
-          const asset = this.assets[assetKey];
-          const prices = this.generateChaoticPriceSeries(
-            candles, 
-            scenario, 
-            stressLevel, 
-            asset.defaultPrice || 100,
-            baseVolatility,
-            scenarioMultiplier
-          );
-          
-          market.assets[assetKey] = {
-            ...asset,
-            prices: prices
-          };
-        });
-        
-        // Generate correlation matrix
-        market.correlationMatrix = this.generateChaoticCorrelations(this.selectedAssets, scenario, stressLevel);
-        
-        return market;
-      }
-      
-      // Get base volatility based on stress level
-      getBaseVolatility(stressLevel) {
-        const volatilityMap = {
-          'low': 0.01,
-          'medium': 0.02,
-          'high': 0.04,
-          'extreme': 0.08
-        };
-        return volatilityMap[stressLevel] || 0.02;
-      }
-      
-      // Get scenario multiplier
-      getScenarioMultiplier(scenario) {
-        const multiplierMap = {
-          'normal': 1.0,
-          'volatile': 1.5,
-          'crisis': 2.5,
-          'bubble': 2.0,
-          'trending': 1.2,
-          'sideways': 0.8,
-          'mixed': 1.3
-        };
-        return multiplierMap[scenario] || 1.0;
-      }
-      
-      // Generate chaotic price series with realistic patterns
-      generateChaoticPriceSeries(candles, scenario, stressLevel, startPrice, baseVolatility, scenarioMultiplier) {
-        const prices = [startPrice];
-        let currentPrice = startPrice;
-        
-        // Scenario-specific parameters
-        const scenarioParams = this.getScenarioParameters(scenario, stressLevel);
-        
-        for (let i = 1; i < candles; i++) {
-          let volatility = baseVolatility * scenarioMultiplier;
-          let drift = 0;
-          
-          // Apply scenario-specific patterns
-          if (scenario === 'crisis') {
-            // Crisis: High volatility, negative drift, occasional crashes
-            volatility *= 1 + Math.random() * 2;
-            drift = -0.001 - Math.random() * 0.002;
-            
-            // Random crash events
-            if (Math.random() < 0.01) {
-              currentPrice *= 0.7 + Math.random() * 0.2; // 10-30% crash
+
+            if (direction === 'sell' && takeProfit >= entryPrice) {
+                alert('Para ventas, el Take Profit debe ser menor al precio de entrada');
+                return;
             }
-          } else if (scenario === 'bubble') {
-            // Bubble: Increasing volatility, positive drift, eventual crash
-            volatility *= 1 + (i / candles) * 2;
-            drift = 0.002 + (i / candles) * 0.003;
-            
-            // Bubble burst at 80% of the way
-            if (i > candles * 0.8 && Math.random() < 0.1) {
-              currentPrice *= 0.5 + Math.random() * 0.3; // 20-50% crash
+
+            if (direction === 'sell' && stopLoss <= entryPrice) {
+                alert('Para ventas, el Stop Loss debe ser mayor al precio de entrada');
+                return;
             }
-          } else if (scenario === 'trending') {
-            // Trending: Low volatility, consistent drift
-            volatility *= 0.8;
-            drift = Math.random() > 0.5 ? 0.001 : -0.001;
-          } else if (scenario === 'sideways') {
-            // Sideways: Low volatility, mean reversion
-            volatility *= 0.6;
-            const meanPrice = startPrice;
-            const reversion = (meanPrice - currentPrice) * 0.001;
-            drift = reversion;
-          } else if (scenario === 'volatile') {
-            // Volatile: High volatility, random drift
-            volatility *= 1.5 + Math.random();
-            drift = (Math.random() - 0.5) * 0.003;
-          }
-          
-          // Generate price change
-          const change = (Math.random() - 0.5) * volatility + drift;
-          currentPrice = Math.max(currentPrice * (1 + change), 0.01);
-          
-          // Apply scenario-specific filters
-          currentPrice = this.applyScenarioFilters(currentPrice, scenario, i, candles);
-          
-          prices.push(currentPrice);
+
+            // Show loading
+            document.getElementById('simulateBtn').disabled = true;
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('results').style.display = 'none';
+
+            // Simulate delay for realism
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+            // Run simulation
+            const result = simulator.evaluateStrategy(direction, entryPrice, takeProfit, stopLoss, lotSize, timeframe);
+
+            // Display results
+            displayResults(result);
+
+            // Hide loading
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('results').style.display = 'block';
+            document.getElementById('simulateBtn').disabled = false;
         }
-        
-        return prices;
-      }
-      
-      // Get scenario-specific parameters
-      getScenarioParameters(scenario, stressLevel) {
-        const params = {
-          'crisis': { crashProbability: 0.01, recoveryTime: 100 },
-          'bubble': { bubbleStrength: 0.8, burstProbability: 0.1 },
-          'trending': { trendStrength: 0.7, reversalProbability: 0.05 },
-          'sideways': { meanReversion: 0.8, breakoutProbability: 0.02 },
-          'volatile': { volatilitySpikes: 0.1, calmPeriods: 0.3 }
-        };
-        
-        return params[scenario] || {};
-      }
-      
-      // Apply scenario-specific filters
-      applyScenarioFilters(price, scenario, index, totalCandles) {
-        if (scenario === 'crisis' && index > totalCandles * 0.7) {
-          // Crisis recovery phase
-          return price * (1 + Math.random() * 0.01);
-        } else if (scenario === 'bubble' && index > totalCandles * 0.8) {
-          // Post-bubble stabilization
-          return price * (1 + (Math.random() - 0.5) * 0.005);
-        }
-        
-        return price;
-      }
-      
-      // Generate chaotic correlations
-      generateChaoticCorrelations(assets, scenario, stressLevel) {
-        const matrix = {};
-        
-        assets.forEach(asset1 => {
-          matrix[asset1] = {};
-          assets.forEach(asset2 => {
-            if (asset1 === asset2) {
-              matrix[asset1][asset2] = 1;
-            } else {
-              let baseCorrelation = this.getRealisticCorrelation(asset1, asset2);
-              
-              // Apply scenario-specific correlation changes
-              if (scenario === 'crisis') {
-                // Crisis: correlations increase (flight to quality)
-                baseCorrelation = Math.min(0.95, baseCorrelation + 0.2);
-              } else if (scenario === 'bubble') {
-                // Bubble: correlations increase (everything goes up)
-                baseCorrelation = Math.min(0.9, baseCorrelation + 0.15);
-              } else if (scenario === 'sideways') {
-                // Sideways: correlations decrease (divergence)
-                baseCorrelation = Math.max(-0.3, baseCorrelation - 0.1);
-              }
-              
-              // Add some randomness based on stress level
-              const randomness = (Math.random() - 0.5) * (stressLevel === 'extreme' ? 0.3 : 0.1);
-              matrix[asset1][asset2] = Math.max(-1, Math.min(1, baseCorrelation + randomness));
+
+        function displayResults(result) {
+            const { result: outcome, profitLoss, roi, finalPrice, daysElapsed } = result;
+
+            let outcomeText, outcomeClass;
+            switch (outcome) {
+                case 'TAKE_PROFIT':
+                    outcomeText = '🎯 Take Profit Alcanzado';
+                    outcomeClass = 'profit';
+                    break;
+                case 'STOP_LOSS':
+                    outcomeText = '🛑 Stop Loss Activado';
+                    outcomeClass = 'loss';
+                    break;
+                case 'TIMEOUT':
+                    outcomeText = '⏱️ Tiempo Agotado';
+                    outcomeClass = profitLoss >= 0 ? 'profit' : 'loss';
+                    break;
             }
-          });
+
+            document.getElementById('finalResult').textContent = outcomeText;
+            document.getElementById('finalResult').className = `result-value ${outcomeClass}`;
+
+            document.getElementById('profitLoss').textContent = `$${profitLoss.toFixed(2)}`;
+            document.getElementById('profitLoss').className = `result-value ${profitLoss >= 0 ? 'profit' : 'loss'}`;
+
+            document.getElementById('roi').textContent = `${roi.toFixed(2)}%`;
+            document.getElementById('roi').className = `result-value ${roi >= 0 ? 'profit' : 'loss'}`;
+
+            document.getElementById('finalPrice').textContent = `$${finalPrice.toFixed(2)}`;
+            document.getElementById('daysElapsed').textContent = `${daysElapsed} días`;
+        }
+
+        function resetSimulation() {
+            document.getElementById('results').style.display = 'none';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            updatePriceDisplay();
+            setInterval(updatePriceDisplay, 3000); // Update price every 3 seconds
         });
-        
-        return matrix;
-      }
-      
-      // Get realistic correlation between assets
-      getRealisticCorrelation(asset1, asset2) {
-        const correlations = {
-          'bitcoin-ethereum': 0.7,
-          'bitcoin-gold': 0.1,
-          'bitcoin-sp500': 0.3,
-          'bitcoin-nasdaq': 0.4,
-          'gold-sp500': -0.1,
-          'gold-nasdaq': -0.15,
-          'sp500-nasdaq': 0.9
-        };
-        
-        const key = `${asset1}-${asset2}`;
-        const reverseKey = `${asset2}-${asset1}`;
-        
-        return correlations[key] || correlations[reverseKey] || (Math.random() - 0.5) * 0.6;
-      }
-      
-      // Execute strategy on specific market data
-      executeStrategyOnMarket(marketData, strategyType, params, fee, initialCapital) {
-        // Temporarily replace current market data
-        const originalMarket = this.marketData;
-        this.marketData = marketData;
-        
-        // Run strategy
-        const results = this.executeStrategy(strategyType, params, fee, initialCapital);
-        
-        // Restore original market data
-        this.marketData = originalMarket;
-        
-        return results;
-      }
-      
-      // Calculate chaos engine summary
-      calculateChaosSummary(results) {
-        const tests = results.tests;
-        
-        if (tests.length === 0) return;
-        
-        // Calculate basic metrics
-        const returns = tests.map(t => t.totalReturn);
-        const drawdowns = tests.map(t => t.maxDrawdown);
-        const sharpes = tests.map(t => t.sharpeRatio);
-        
-        results.summary.avgReturn = returns.reduce((a, b) => a + b, 0) / returns.length;
-        results.summary.avgDrawdown = drawdowns.reduce((a, b) => a + b, 0) / drawdowns.length;
-        results.summary.avgSharpe = sharpes.reduce((a, b) => a + b, 0) / sharpes.length;
-        
-        results.summary.bestReturn = Math.max(...returns);
-        results.summary.worstReturn = Math.min(...returns);
-        results.summary.bestSharpe = Math.max(...sharpes);
-        results.summary.worstDrawdown = Math.max(...drawdowns);
-        
-        // Calculate success rate (profitable tests)
-        const profitableTests = tests.filter(t => t.totalReturn > 0).length;
-        results.summary.successRate = (profitableTests / tests.length) * 100;
-        
-        // Calculate survival rate (tests with drawdown < 50%)
-        const survivingTests = tests.filter(t => t.maxDrawdown < 0.5).length;
-        results.summary.survivalRate = (survivingTests / tests.length) * 100;
-      }
-      
-      // Display chaos engine results
-      displayChaosResults(results) {
-        document.querySelector('.chaos-results').style.display = 'block';
-        
-        // Update summary KPIs
-        document.getElementById('chaosTotalTests').textContent = results.totalTests.toLocaleString();
-        document.getElementById('chaosSuccessRate').textContent = results.summary.successRate.toFixed(1) + '%';
-        document.getElementById('chaosAvgReturn').textContent = results.summary.avgReturn.toFixed(2) + '%';
-        document.getElementById('chaosMaxDD').textContent = (results.summary.avgDrawdown * 100).toFixed(2) + '%';
-        document.getElementById('chaosSharpe').textContent = results.summary.avgSharpe.toFixed(2);
-        document.getElementById('chaosSurvivalRate').textContent = results.summary.survivalRate.toFixed(1) + '%';
-        
-        // Render charts
-        this.renderChaosCharts(results);
-        
-        // Render scenario breakdown
-        this.renderChaosScenarioBreakdown(results);
-        
-        // Render recommendations
-        this.renderChaosRecommendations(results);
-      }
-      
-      // Render chaos engine charts
-      renderChaosCharts(results) {
-        // Return distribution chart
-        this.renderDistributionChart('chaosReturnChart', 
-          results.tests.map(t => t.totalReturn), 
-          'Return Distribution (%)', 
-          'Frequency'
-        );
-        
-        // Drawdown distribution chart
-        this.renderDistributionChart('chaosDrawdownChart', 
-          results.tests.map(t => t.maxDrawdown * 100), 
-          'Max Drawdown (%)', 
-          'Frequency'
-        );
-      }
-      
-      // Render distribution chart
-      renderDistributionChart(canvasId, data, xLabel, yLabel) {
-        const canvas = document.getElementById(canvasId);
-        if (!canvas) return;
-        
-        const ctx = canvas.getContext('2d');
-        const width = canvas.width;
-        const height = canvas.height;
-        
-        ctx.clearRect(0, 0, width, height);
-        
-        // Create histogram
-        const min = Math.min(...data);
-        const max = Math.max(...data);
-        const binCount = 20;
-        const binSize = (max - min) / binCount;
-        
-        const bins = new Array(binCount).fill(0);
-        data.forEach(value => {
-          const binIndex = Math.min(Math.floor((value - min) / binSize), binCount - 1);
-          bins[binIndex]++;
-        });
-        
-        const maxBin = Math.max(...bins);
-        
-        // Draw histogram
-        ctx.fillStyle = '#66e0a3';
-        bins.forEach((count, i) => {
-          const x = (i / binCount) * (width - 40) + 20;
-          const barHeight = (count / maxBin) * (height - 60);
-          const y = height - 20 - barHeight;
-          
-          ctx.fillRect(x, y, (width - 40) / binCount - 2, barHeight);
-        });
-        
-        // Draw labels
-        ctx.fillStyle = '#333';
-        ctx.font = '12px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText(xLabel, width / 2, height - 5);
-      }
-      
-      // Render scenario breakdown
-      renderChaosScenarioBreakdown(results) {
-        const container = document.getElementById('chaosScenarioBreakdown');
-        if (!container) return;
-        
-        container.innerHTML = '';
-        
-        Object.entries(results.scenarioResults).forEach(([scenario, data]) => {
-          if (data.count === 0) return;
-          
-          const avgReturn = data.returns.reduce((a, b) => a + b, 0) / data.returns.length;
-          const avgDrawdown = data.drawdowns.reduce((a, b) => a + b, 0) / data.drawdowns.length;
-          const avgSharpe = data.sharpes.reduce((a, b) => a + b, 0) / data.sharpes.length;
-          
-          const div = document.createElement('div');
-          div.className = 'scenario-item';
-          div.innerHTML = `
-            <h6>${scenario.charAt(0).toUpperCase() + scenario.slice(1)} Markets</h6>
-            <p>Tests: ${data.count} | Avg Return: ${avgReturn.toFixed(2)}% | Avg DD: ${(avgDrawdown * 100).toFixed(2)}% | Avg Sharpe: ${avgSharpe.toFixed(2)}</p>
-          `;
-          
-          container.appendChild(div);
-        });
-      }
-      
-      // Render chaos recommendations
-      renderChaosRecommendations(results) {
-        const container = document.getElementById('chaosRecommendations');
-        if (!container) return;
-        
-        container.innerHTML = '';
-        
-        const recommendations = this.generateChaosRecommendations(results);
-        
-        recommendations.forEach(rec => {
-          const div = document.createElement('div');
-          div.className = `recommendation ${rec.priority}`;
-          div.innerHTML = `
-            <strong>${rec.category}</strong> (${rec.priority} priority)<br>
-            ${rec.message}<br>
-            <em>Action: ${rec.action}</em>
-          `;
-          
-          container.appendChild(div);
-        });
-      }
-      
-      // Generate chaos recommendations
-      generateChaosRecommendations(results) {
-        const recommendations = [];
-        
-        // Success rate analysis
-        if (results.summary.successRate < 40) {
-          recommendations.push({
-            category: 'Strategy Performance',
-            priority: 'high',
-            message: 'Strategy shows poor performance across market scenarios. Consider fundamental changes to the approach.',
-            action: 'Review strategy logic and risk management rules'
-          });
-        } else if (results.summary.successRate < 60) {
-          recommendations.push({
-            category: 'Strategy Performance',
-            priority: 'medium',
-            message: 'Strategy performance is below average. Some optimization may be needed.',
-            action: 'Fine-tune parameters and test additional scenarios'
-          });
-        }
-        
-        // Drawdown analysis
-        if (results.summary.avgDrawdown > 0.3) {
-          recommendations.push({
-            category: 'Risk Management',
-            priority: 'high',
-            message: 'Strategy shows excessive drawdowns. Risk management needs improvement.',
-            action: 'Implement stop-losses and position sizing rules'
-          });
-        }
-        
-        // Scenario analysis
-        const worstScenario = Object.entries(results.scenarioResults)
-          .filter(([_, data]) => data.count > 0)
-          .sort(([_, a], [__, b]) => {
-            const aAvg = a.returns.reduce((sum, r) => sum + r, 0) / a.returns.length;
-            const bAvg = b.returns.reduce((sum, r) => sum + r, 0) / b.returns.length;
-            return aAvg - bAvg;
-          })[0];
-        
-        if (worstScenario) {
-          const [scenario, data] = worstScenario;
-          const avgReturn = data.returns.reduce((a, b) => a + b, 0) / a.returns.length;
-          
-          if (avgReturn < -10) {
-            recommendations.push({
-              category: 'Market Scenario',
-              priority: 'medium',
-              message: `Strategy struggles in ${scenario} markets (avg return: ${avgReturn.toFixed(2)}%).`,
-              action: 'Develop scenario-specific adaptations or avoid trading in these conditions'
-            });
-          }
-        }
-        
-        // Overall assessment
-        if (results.summary.successRate > 70 && results.summary.avgDrawdown < 0.2) {
-          recommendations.push({
-            category: 'Strategy Assessment',
-            priority: 'low',
-            message: 'Strategy shows robust performance across various market conditions.',
-            action: 'Continue monitoring and consider live trading with proper risk management'
-          });
-        }
-        
-        return recommendations;
-      }
-      
-      // Export Chaos Engine results
-      exportChaosResults() {
-        if (!this.chaosResults) {
-          alert('No Chaos Engine results available to export');
-          return;
-        }
-        
-        const exportData = JSON.stringify(this.chaosResults, null, 2);
-        const blob = new Blob([exportData], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `chaos_engine_results_${new Date().toISOString().split('T')[0]}.json`;
-        a.click();
-        
-        URL.revokeObjectURL(url);
-      }
-      
-      // Export quality report
-      exportQualityReport() {
-        if (!this.qualityReport) {
-          alert('No quality report available to export');
-          return;
-        }
-        
-        const exportData = JSON.stringify(this.qualityReport, null, 2);
-        const blob = new Blob([exportData], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `quality_report_${new Date().toISOString().split('T')[0]}.json`;
-        a.click();
-        
-        URL.revokeObjectURL(url);
-      }
-      
-      // Export full comprehensive report
-      exportFullReport() {
-        if (!this.chaosResults || !this.qualityReport) {
-          alert('No complete results available to export');
-          return;
-        }
-        
-        try {
-          // Create comprehensive report
-          const fullReport = {
-            metadata: {
-              exportTimestamp: new Date().toISOString(),
-              version: '1.0.0',
-              platform: 'Advanced Trading Algorithm Tester',
-              description: 'Comprehensive strategy testing report including Chaos Engine results and quality assessment'
-            },
-            strategy: {
-              type: document.getElementById('strategyType')?.value || 'ma',
-              params: this.getStrategyParams(document.getElementById('strategyType')?.value || 'ma'),
-              customCode: document.getElementById('customStrategyCode')?.value || ''
-            },
-            market: {
-              selectedAssets: this.selectedAssets,
-              settings: {
-                candles: parseInt(document.getElementById('candles')?.value || 1000),
-                seed: document.getElementById('seed')?.value || 'markets-2025',
-                fee: parseFloat(document.getElementById('fee')?.value || 0.001),
-                initialCapital: parseFloat(document.getElementById('initialCapital')?.value || 10000)
-              },
-              marketData: this.marketData ? {
-                candles: this.marketData.timestamps.length,
-                assets: Object.keys(this.marketData.assets),
-                seed: document.getElementById('seed')?.value || 'markets-2025'
-              } : null
-            },
-            chaosEngine: {
-              results: this.chaosResults,
-              qualityReport: this.qualityReport
-            },
-            summary: {
-              totalTests: this.chaosResults.totalTests,
-              successRate: this.chaosResults.summary.successRate,
-              avgReturn: this.chaosResults.summary.avgReturn,
-              avgDrawdown: this.chaosResults.summary.avgDrawdown,
-              avgSharpe: this.chaosResults.summary.avgSharpe
-            },
-            recommendations: this.chaosResults.recommendations || []
-          };
-          
-          // Export as JSON
-          const exportData = JSON.stringify(fullReport, null, 2);
-          const blob = new Blob([exportData], { type: 'application/json' });
-          const url = URL.createObjectURL(blob);
-          
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `comprehensive_trading_report_${new Date().toISOString().split('T')[0]}.json`;
-          a.click();
-          
-          URL.revokeObjectURL(url);
-          
-          console.log('Full comprehensive report exported successfully');
-          
-        } catch (error) {
-          console.error('Error exporting full report:', error);
-          alert('Error exporting full report: ' + error.message);
-        }
-      }
-    }
-    
-    // Initialize the app when DOM is loaded
-    document.addEventListener('DOMContentLoaded', () => {
-      console.log('Initializing SimpleTradingApp...');
-      window.tradingApp = new SimpleTradingApp();
-      console.log('SimpleTradingApp created:', window.tradingApp);
-    });
-  </script>
+    </script>
 </body>
 </html>
