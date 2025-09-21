@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gold Trading Simulator - XAU/USD</title>
+    <title>Quantum Market Simulator - Professional Trading Environment</title>
     <style>
         * {
             margin: 0;
@@ -12,12 +12,29 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            color: #ffffff;
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0c0c0c 0%, #1a1a1a 50%, #2d2d2d 100%);
+            color: #e8e8e8;
             min-height: 100vh;
             padding: 20px;
             line-height: 1.6;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(120, 53, 15, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(139, 69, 19, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(160, 82, 45, 0.05) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
         }
 
         .container {
@@ -27,37 +44,76 @@
 
         .header {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 40px;
+            position: relative;
         }
 
         .logo {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, #d4af37 0%, #b8860b 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            color: #000;
+            font-weight: 700;
+            box-shadow: 0 8px 32px rgba(212, 175, 55, 0.3);
+            border: 2px solid rgba(212, 175, 55, 0.5);
         }
 
         h1 {
-            font-size: 1.5rem;
-            font-weight: 600;
-            margin-bottom: 5px;
-            background: linear-gradient(45deg, #ffd700, #ffb347);
+            font-size: 1.8rem;
+            font-weight: 300;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #d4af37 0%, #f4d03f 50%, #d4af37 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            letter-spacing: 0.5px;
         }
 
         .subtitle {
-            color: #a0a0a0;
-            font-size: 0.9rem;
+            color: #b8b8b8;
+            font-size: 0.85rem;
+            font-weight: 300;
+            letter-spacing: 1px;
+            text-transform: uppercase;
         }
 
         .card {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 25px;
-            margin-bottom: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            background: rgba(26, 26, 26, 0.85);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 28px;
+            margin-bottom: 24px;
+            border: 1px solid rgba(212, 175, 55, 0.15);
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.3), transparent);
+            border-radius: 16px 16px 0 0;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(212, 175, 55, 0.25);
+            box-shadow: 
+                0 12px 40px rgba(0, 0, 0, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.08);
         }
 
         .form-group {
@@ -74,23 +130,28 @@
 
         input, select {
             width: 100%;
-            padding: 15px;
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            border-radius: 12px;
-            background: rgba(255, 255, 255, 0.1);
-            color: #ffffff;
-            font-size: 1rem;
+            padding: 16px 18px;
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            border-radius: 10px;
+            background: rgba(15, 15, 15, 0.8);
+            color: #e8e8e8;
+            font-size: 0.95rem;
             transition: all 0.3s ease;
+            font-weight: 300;
         }
 
         input:focus, select:focus {
             outline: none;
-            border-color: #ffd700;
-            box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.2);
+            border-color: #d4af37;
+            box-shadow: 
+                0 0 0 2px rgba(212, 175, 55, 0.15),
+                0 4px 12px rgba(212, 175, 55, 0.1);
+            background: rgba(20, 20, 20, 0.9);
         }
 
         input::placeholder {
-            color: #a0a0a0;
+            color: #888;
+            font-weight: 300;
         }
 
         .input-group {
@@ -101,51 +162,79 @@
 
         .btn {
             width: 100%;
-            padding: 18px;
-            background: linear-gradient(45deg, #ffd700, #ffb347);
-            color: #1a1a2e;
+            padding: 18px 24px;
+            background: linear-gradient(135deg, #d4af37 0%, #b8860b 100%);
+            color: #000;
             border: none;
-            border-radius: 12px;
-            font-size: 1.1rem;
+            border-radius: 10px;
+            font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            margin-top: 10px;
+            margin-top: 12px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .btn:hover::before {
+            left: 100%;
         }
 
         .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(255, 215, 0, 0.3);
+            transform: translateY(-3px);
+            box-shadow: 
+                0 12px 24px rgba(212, 175, 55, 0.3),
+                0 6px 12px rgba(212, 175, 55, 0.2);
+            background: linear-gradient(135deg, #f4d03f 0%, #d4af37 100%);
         }
 
         .btn:active {
-            transform: translateY(0);
+            transform: translateY(-1px);
         }
 
         .btn:disabled {
-            opacity: 0.6;
+            opacity: 0.5;
             cursor: not-allowed;
             transform: none;
+            background: linear-gradient(135deg, #666 0%, #555 100%);
         }
 
         .price-display {
             text-align: center;
-            margin: 20px 0;
-            padding: 20px;
-            background: rgba(255, 215, 0, 0.1);
+            margin: 24px 0;
+            padding: 24px;
+            background: rgba(212, 175, 55, 0.08);
             border-radius: 12px;
-            border: 1px solid rgba(255, 215, 0, 0.3);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            backdrop-filter: blur(10px);
         }
 
         .current-price {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #ffd700;
-            margin-bottom: 5px;
+            font-size: 2.2rem;
+            font-weight: 300;
+            color: #d4af37;
+            margin-bottom: 8px;
+            font-family: 'SF Mono', 'Monaco', monospace;
+            letter-spacing: 1px;
         }
 
         .price-change {
             font-size: 0.9rem;
+            font-weight: 300;
+            opacity: 0.8;
         }
 
         .price-up { color: #4ade80; }
@@ -187,41 +276,50 @@
 
         .contact-section {
             text-align: center;
-            margin-top: 30px;
-            padding: 25px;
-            background: rgba(255, 215, 0, 0.05);
-            border-radius: 20px;
-            border: 1px solid rgba(255, 215, 0, 0.2);
+            margin-top: 32px;
+            padding: 28px;
+            background: rgba(212, 175, 55, 0.05);
+            border-radius: 16px;
+            border: 1px solid rgba(212, 175, 55, 0.15);
+            backdrop-filter: blur(10px);
         }
 
         .contact-title {
-            font-size: 1.2rem;
-            margin-bottom: 10px;
-            color: #ffd700;
+            font-size: 1.3rem;
+            margin-bottom: 12px;
+            color: #d4af37;
+            font-weight: 300;
+            letter-spacing: 0.5px;
         }
 
         .contact-text {
-            color: #a0a0a0;
-            margin-bottom: 20px;
+            color: #b8b8b8;
+            margin-bottom: 24px;
             font-size: 0.9rem;
+            line-height: 1.6;
+            font-weight: 300;
         }
 
         .contact-btn {
-            background: linear-gradient(45deg, #4ade80, #22c55e);
-            color: white;
-            padding: 15px 30px;
+            background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+            color: #000;
+            padding: 16px 32px;
             border: none;
-            border-radius: 25px;
+            border-radius: 8px;
             font-weight: 600;
             cursor: pointer;
             text-decoration: none;
             display: inline-block;
             transition: all 0.3s ease;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            font-size: 0.9rem;
         }
 
         .contact-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(74, 222, 128, 0.3);
+            box-shadow: 0 8px 20px rgba(74, 222, 128, 0.3);
+            background: linear-gradient(135deg, #5ef894 0%, #34d058 100%);
         }
 
         .loading {
@@ -246,12 +344,15 @@
         }
 
         .market-info {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 15px;
+            background: rgba(26, 26, 26, 0.6);
+            padding: 18px;
             border-radius: 12px;
-            margin-bottom: 20px;
+            margin-bottom: 24px;
             font-size: 0.85rem;
-            color: #a0a0a0;
+            color: #b8b8b8;
+            border: 1px solid rgba(212, 175, 55, 0.1);
+            backdrop-filter: blur(10px);
+            line-height: 1.5;
         }
 
         @media (max-width: 480px) {
@@ -275,9 +376,9 @@
     <div class="container">
         <!-- Header -->
         <div class="header">
-            <div class="logo">🥇</div>
-            <h1>Gold Trading Simulator</h1>
-            <p class="subtitle">Simula tu estrategia en XAU/USD</p>
+            <div class="logo">Q</div>
+            <h1>Quantum Market Simulator</h1>
+            <p class="subtitle">Professional Trading Environment</p>
         </div>
 
         <!-- Current Price Display -->
@@ -290,108 +391,108 @@
 
         <!-- Market Info -->
         <div class="market-info">
-            <strong>💡 Mercado del Oro:</strong> Simulación basada en datos históricos y tendencias actuales del XAU/USD. El precio actual de referencia es ~$3,600 por onza.
+            <strong>Market Intelligence:</strong> Advanced simulation engine powered by historical data analysis and real-time market dynamics. Reference pricing based on current market conditions and volatility patterns.
         </div>
 
         <!-- Strategy Input Form -->
         <div class="card">
-            <h2 style="margin-bottom: 20px; font-size: 1.3rem;">📊 Tu Estrategia</h2>
+            <h2 style="margin-bottom: 24px; font-size: 1.3rem; color: #d4af37; font-weight: 300;">Strategy Configuration</h2>
             
             <div class="form-group">
-                <label for="tradeDirection">Dirección de la Operación</label>
+                <label for="tradeDirection">Position Direction</label>
                 <select id="tradeDirection">
-                    <option value="buy">🟢 Comprar (Long) - Espero que suba</option>
-                    <option value="sell">🔴 Vender (Short) - Espero que baje</option>
+                    <option value="buy">Long Position - Bullish Outlook</option>
+                    <option value="sell">Short Position - Bearish Outlook</option>
                 </select>
             </div>
 
             <div class="form-group">
-                <label for="entryPrice">Precio de Entrada (USD)</label>
-                <input type="number" id="entryPrice" value="3600" step="0.01" placeholder="3600.00">
+                <label for="entryPrice">Entry Price (USD)</label>
+                <input type="number" id="entryPrice" value="3600" step="0.01" placeholder="Auto-calculated">
             </div>
 
             <div class="input-group">
                 <div class="form-group">
-                    <label for="takeProfit">Take Profit ($)</label>
-                    <input type="number" id="takeProfit" value="3650" step="0.01" placeholder="3650.00">
+                    <label for="takeProfit">Take Profit Target ($)</label>
+                    <input type="number" id="takeProfit" value="3650" step="0.01" placeholder="Auto-calculated">
                 </div>
                 <div class="form-group">
-                    <label for="stopLoss">Stop Loss ($)</label>
-                    <input type="number" id="stopLoss" value="3550" step="0.01" placeholder="3550.00">
+                    <label for="stopLoss">Stop Loss Level ($)</label>
+                    <input type="number" id="stopLoss" value="3550" step="0.01" placeholder="Auto-calculated">
                 </div>
             </div>
 
             <div class="input-group">
                 <div class="form-group">
-                    <label for="lotSize">Tamaño (Onzas)</label>
-                    <input type="number" id="lotSize" value="1" step="0.1" min="0.1" placeholder="1.0">
+                    <label for="lotSize">Position Size (Units)</label>
+                    <input type="number" id="lotSize" value="1" step="0.1" min="0.1" placeholder="Auto-optimized">
                 </div>
                 <div class="form-group">
-                    <label for="timeframe">Tiempo (días)</label>
-                    <input type="number" id="timeframe" value="30" min="1" max="365" placeholder="30">
+                    <label for="timeframe">Simulation Period (Days)</label>
+                    <input type="number" id="timeframe" value="30" min="1" max="365" placeholder="Auto-selected">
                 </div>
             </div>
 
             <button class="btn" id="simulateBtn" onclick="runSimulation()">
-                🚀 Simular Estrategia
+                Execute Simulation
             </button>
         </div>
 
         <!-- Loading -->
         <div class="loading" id="loading">
             <div class="spinner"></div>
-            <p>Simulando tu estrategia...</p>
+            <p>Processing simulation...</p>
         </div>
 
         <!-- Results -->
         <div class="card results" id="results">
-            <h2 style="margin-bottom: 20px; font-size: 1.3rem;">📈 Resultados de la Simulación</h2>
+            <h2 style="margin-bottom: 24px; font-size: 1.3rem; color: #d4af37; font-weight: 300;">Simulation Results</h2>
             
             <div class="result-item">
-                <span class="result-label">Resultado Final:</span>
+                <span class="result-label">Execution Outcome:</span>
                 <span class="result-value" id="finalResult">-</span>
             </div>
             
             <div class="result-item">
-                <span class="result-label">Ganancia/Pérdida:</span>
+                <span class="result-label">P&L Performance:</span>
                 <span class="result-value" id="profitLoss">-</span>
             </div>
             
             <div class="result-item">
-                <span class="result-label">ROI:</span>
+                <span class="result-label">Return on Investment:</span>
                 <span class="result-value" id="roi">-</span>
             </div>
             
             <div class="result-item">
-                <span class="result-label">Precio Final:</span>
+                <span class="result-label">Exit Price:</span>
                 <span class="result-value" id="finalPrice">-</span>
             </div>
             
             <div class="result-item">
-                <span class="result-label">Días Transcurridos:</span>
+                <span class="result-label">Duration:</span>
                 <span class="result-value" id="daysElapsed">-</span>
             </div>
 
-            <button class="btn" onclick="resetSimulation()" style="margin-top: 20px;">
-                🔄 Nueva Simulación
+            <button class="btn" onclick="resetSimulation()" style="margin-top: 24px;">
+                New Simulation
             </button>
         </div>
 
-        <!-- Contact Section -->
+        <!-- Security Notice -->
         <div class="contact-section">
-            <h3 class="contact-title">💼 ¿Tienes Resultados Reales?</h3>
+            <h3 class="contact-title">Professional Access Required</h3>
             <p class="contact-text">
-                Si tienes cuentas auditadas o resultados comprobables, podemos conectarte con brokers institucionales para gestión de capital.
+                This platform is designed for serious traders and institutional clients. All strategies remain confidential and secure. Demo access only - real capital management requires verified credentials and audit trails.
             </p>
-            <a href="mailto:contact@goldtrading.com" class="contact-btn">
-                📧 Contactar Ahora
+            <a href="mailto:institutional@quantummarkets.com" class="contact-btn">
+                Request Institutional Access
             </a>
         </div>
     </div>
 
     <script>
-        // Gold market simulation engine
-        class GoldMarketSimulator {
+        // Advanced market simulation engine
+        class QuantumMarketSimulator {
             constructor() {
                 this.currentPrice = 3600.00;
                 this.volatility = 0.02; // 2% daily volatility
@@ -478,7 +579,7 @@
             }
         }
 
-        const simulator = new GoldMarketSimulator();
+        const simulator = new QuantumMarketSimulator();
 
         // Update price display with animation
         function updatePriceDisplay() {
@@ -505,27 +606,27 @@
 
             // Validation
             if (!entryPrice || !takeProfit || !stopLoss || !lotSize || !timeframe) {
-                alert('Por favor completa todos los campos');
+                alert('Please complete all required fields');
                 return;
             }
 
             if (direction === 'buy' && takeProfit <= entryPrice) {
-                alert('Para compras, el Take Profit debe ser mayor al precio de entrada');
+                alert('For long positions, Take Profit must be higher than entry price');
                 return;
             }
 
             if (direction === 'buy' && stopLoss >= entryPrice) {
-                alert('Para compras, el Stop Loss debe ser menor al precio de entrada');
+                alert('For long positions, Stop Loss must be lower than entry price');
                 return;
             }
 
             if (direction === 'sell' && takeProfit >= entryPrice) {
-                alert('Para ventas, el Take Profit debe ser menor al precio de entrada');
+                alert('For short positions, Take Profit must be lower than entry price');
                 return;
             }
 
             if (direction === 'sell' && stopLoss <= entryPrice) {
-                alert('Para ventas, el Stop Loss debe ser mayor al precio de entrada');
+                alert('For short positions, Stop Loss must be higher than entry price');
                 return;
             }
 
@@ -555,15 +656,15 @@
             let outcomeText, outcomeClass;
             switch (outcome) {
                 case 'TAKE_PROFIT':
-                    outcomeText = '🎯 Take Profit Alcanzado';
+                    outcomeText = 'Target Achieved';
                     outcomeClass = 'profit';
                     break;
                 case 'STOP_LOSS':
-                    outcomeText = '🛑 Stop Loss Activado';
+                    outcomeText = 'Stop Loss Triggered';
                     outcomeClass = 'loss';
                     break;
                 case 'TIMEOUT':
-                    outcomeText = '⏱️ Tiempo Agotado';
+                    outcomeText = 'Time Expired';
                     outcomeClass = profitLoss >= 0 ? 'profit' : 'loss';
                     break;
             }
@@ -578,7 +679,7 @@
             document.getElementById('roi').className = `result-value ${roi >= 0 ? 'profit' : 'loss'}`;
 
             document.getElementById('finalPrice').textContent = `$${finalPrice.toFixed(2)}`;
-            document.getElementById('daysElapsed').textContent = `${daysElapsed} días`;
+            document.getElementById('daysElapsed').textContent = `${daysElapsed} days`;
         }
 
         function resetSimulation() {
@@ -586,10 +687,45 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
+        // Auto-setup intelligent defaults
+        function setupIntelligentDefaults() {
+            const currentPrice = simulator.currentPrice;
+            const volatility = simulator.volatility;
+            
+            // Auto-calculate entry price based on current market
+            document.getElementById('entryPrice').value = currentPrice.toFixed(2);
+            
+            // Auto-calculate take profit (2% above entry for long, below for short)
+            const direction = document.getElementById('tradeDirection').value;
+            let takeProfit, stopLoss;
+            
+            if (direction === 'buy') {
+                takeProfit = currentPrice * 1.02; // 2% profit target
+                stopLoss = currentPrice * 0.98;  // 2% stop loss
+            } else {
+                takeProfit = currentPrice * 0.98; // 2% profit target for short
+                stopLoss = currentPrice * 1.02;   // 2% stop loss for short
+            }
+            
+            document.getElementById('takeProfit').value = takeProfit.toFixed(2);
+            document.getElementById('stopLoss').value = stopLoss.toFixed(2);
+            
+            // Auto-optimize position size based on volatility
+            const optimalSize = Math.max(0.1, Math.min(5, 1 / (volatility * 10)));
+            document.getElementById('lotSize').value = optimalSize.toFixed(1);
+            
+            // Auto-select optimal timeframe
+            document.getElementById('timeframe').value = 30;
+        }
+
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
             updatePriceDisplay();
+            setupIntelligentDefaults();
             setInterval(updatePriceDisplay, 3000); // Update price every 3 seconds
+            
+            // Re-setup defaults when direction changes
+            document.getElementById('tradeDirection').addEventListener('change', setupIntelligentDefaults);
         });
     </script>
 </body>
