@@ -4,6 +4,18 @@ A comprehensive platform for testing and validating trading strategies across mu
 
 ## ✨ Features
 
+
+
+
+- Capacidad de cambiar stop loss y take profit en el tiempo
+
+- Mineria para generar dinero en trading?  
+
+
+
+
+
+
 ### 🚀 Core Functionality
 - **Multi-Asset Trading**: Support for Bitcoin, Ethereum, Gold, S&P 500, NASDAQ, and USD
 - **Strategy Templates**: Pre-built strategies including Moving Average, RSI, Bollinger Bands, and MACD

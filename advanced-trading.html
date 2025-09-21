@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantum Trading Platform - Professional Chart Interface</title>
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="styles/trading-interface.css">
+    
+    <style>
+        /* Additional styles for the advanced trading interface */
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #0c0c0c 0%, #1a1a1a 50%, #2d2d2d 100%);
+            color: #e8e8e8;
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(120, 53, 15, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(139, 69, 19, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(160, 82, 45, 0.05) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .platform-header {
+            background: rgba(26, 26, 26, 0.9);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(212, 175, 55, 0.15);
+            padding: 15px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .platform-header .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .platform-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .platform-logo .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #d4af37 0%, #b8860b 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: #000;
+            font-weight: 700;
+        }
+
+        .platform-title {
+            font-size: 1.5rem;
+            font-weight: 300;
+            background: linear-gradient(135deg, #d4af37 0%, #f4d03f 50%, #d4af37 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 0.5px;
+        }
+
+        .platform-subtitle {
+            font-size: 0.85rem;
+            color: #b8b8b8;
+            font-weight: 300;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: rgba(15, 15, 15, 0.8);
+            border-radius: 6px;
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            font-size: 12px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #666;
+            transition: all 0.3s ease;
+        }
+
+        .status-dot.connected {
+            background: #00d4aa;
+            box-shadow: 0 0 10px rgba(0, 212, 170, 0.5);
+        }
+
+        .status-dot.simulation {
+            background: #f59e0b;
+            box-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
+        }
+
+        .status-dot.error {
+            background: #ef4444;
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+        }
+
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .quick-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: rgba(26, 26, 26, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(212, 175, 55, 0.15);
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-card .stat-label {
+            font-size: 11px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+        }
+
+        .stat-card .stat-value {
+            font-size: 18px;
+            color: #e8e8e8;
+            font-family: 'SF Mono', 'Monaco', monospace;
+            font-weight: 600;
+        }
+
+        .stat-card .stat-change {
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .stat-card .stat-change.positive {
+            color: #00d4aa;
+        }
+
+        .stat-card .stat-change.negative {
+            color: #ef4444;
+        }
+
+        /* Notification system */
+        .notification-container {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .notification {
+            background: rgba(26, 26, 26, 0.95);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 8px;
+            padding: 12px 16px;
+            color: #e8e8e8;
+            font-size: 14px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            border-left: 4px solid #00d4aa;
+        }
+
+        .notification.error {
+            border-left: 4px solid #ef4444;
+        }
+
+        .notification.info {
+            border-left: 4px solid #3b82f6;
+        }
+
+        .notification.warning {
+            border-left: 4px solid #f59e0b;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .platform-header .header-content {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .quick-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .main-container {
+                padding: 10px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .quick-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .notification-container {
+                right: 10px;
+                left: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Platform Header -->
+    <header class="platform-header">
+        <div class="header-content">
+            <div class="platform-logo">
+                <div class="logo-icon">Q</div>
+                <div>
+                    <div class="platform-title">Quantum Trading Platform</div>
+                    <div class="platform-subtitle">Professional Chart Interface</div>
+                </div>
+            </div>
+            
+            <div class="header-actions">
+                <div class="connection-status" id="connectionStatus">
+                    <div class="status-dot" id="statusDot"></div>
+                    <span id="statusText">Connecting...</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Quick Stats -->
+        <div class="quick-stats">
+            <div class="stat-card">
+                <div class="stat-label">Active Symbol</div>
+                <div class="stat-value" id="activeSymbol">XAU/USD</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-label">Current Price</div>
+                <div class="stat-value" id="currentPrice">$3,600.00</div>
+                <div class="stat-change" id="priceChange">+12.50 (+0.35%)</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-label">Strategy Elements</div>
+                <div class="stat-value" id="strategyElements">0</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-label">Data Feed</div>
+                <div class="stat-value" id="dataFeedStatus">Live</div>
+            </div>
+        </div>
+
+        <!-- Trading Interface -->
+        <div id="tradingInterface"></div>
+    </div>
+
+    <!-- Notification Container -->
+    <div class="notification-container" id="notificationContainer"></div>
+
+    <!-- Scripts -->
+    <script type="module">
+        import { TradingInterface } from './scripts/trading-interface.js';
+        import { MarketDataFeed } from './scripts/data-feed.js';
+        import { RealTimeChartEngine } from './scripts/chart-engine.js';
+        
+        // Make classes globally available
+        window.RealTimeChartEngine = RealTimeChartEngine;
+        window.TradingInterface = TradingInterface;
+        window.MarketDataFeed = MarketDataFeed;
+
+        // Initialize the application
+        class QuantumTradingApp {
+            constructor() {
+                this.dataFeed = null;
+                this.tradingInterface = null;
+                this.notifications = [];
+                
+                this.init();
+            }
+
+            async init() {
+                console.log('Initializing Quantum Trading Platform...');
+                
+                // Initialize data feed
+                this.initializeDataFeed();
+                
+                // Initialize trading interface
+                this.initializeTradingInterface();
+                
+                // Setup global event listeners
+                this.setupGlobalEventListeners();
+                
+                // Setup notification system
+                this.setupNotificationSystem();
+                
+                console.log('Quantum Trading Platform initialized successfully');
+            }
+
+            initializeDataFeed() {
+                this.dataFeed = new window.MarketDataFeed({
+                    updateInterval: 1000, // 1 second updates
+                    fallbackToSimulation: true
+                });
+
+                // Subscribe to data feed status changes
+                document.addEventListener('dataFeedStatusChange', (event) => {
+                    this.updateConnectionStatus(event.detail);
+                });
+
+                // Subscribe to price updates
+                document.addEventListener('priceUpdate', (event) => {
+                    this.updatePriceDisplay(event.detail);
+                });
+            }
+
+            initializeTradingInterface() {
+                this.tradingInterface = new window.TradingInterface('tradingInterface');
+            }
+
+            setupGlobalEventListeners() {
+                // Handle strategy element updates
+                document.addEventListener('entryAdded', () => {
+                    this.updateStrategyElementsCount();
+                });
+
+                document.addEventListener('stopLossAdded', () => {
+                    this.updateStrategyElementsCount();
+                });
+
+                document.addEventListener('takeProfitAdded', () => {
+                    this.updateStrategyElementsCount();
+                });
+
+                document.addEventListener('supportResistanceAdded', () => {
+                    this.updateStrategyElementsCount();
+                });
+
+                // Handle asset changes
+                document.addEventListener('assetChanged', (event) => {
+                    this.updateActiveSymbol(event.detail.symbol);
+                });
+            }
+
+            setupNotificationSystem() {
+                // Listen for various events to show notifications
+                document.addEventListener('dataFeedStatusChange', (event) => {
+                    const { status, message } = event.detail;
+                    
+                    switch(status) {
+                        case 'connected':
+                            this.showNotification('Data feed connected successfully', 'success');
+                            break;
+                        case 'simulation':
+                            this.showNotification('Using simulated data feed', 'warning');
+                            break;
+                        case 'error':
+                            this.showNotification(`Data feed error: ${message}`, 'error');
+                            break;
+                        case 'fallback':
+                            this.showNotification('Falling back to simulation mode', 'warning');
+                            break;
+                    }
+                });
+
+                document.addEventListener('entryAdded', () => {
+                    this.showNotification('Entry point added', 'info');
+                });
+
+                document.addEventListener('stopLossAdded', () => {
+                    this.showNotification('Stop loss level added', 'info');
+                });
+
+                document.addEventListener('takeProfitAdded', () => {
+                    this.showNotification('Take profit level added', 'info');
+                });
+            }
+
+            updateConnectionStatus(detail) {
+                const { status, message } = detail;
+                const statusDot = document.getElementById('statusDot');
+                const statusText = document.getElementById('statusText');
+                const dataFeedStatus = document.getElementById('dataFeedStatus');
+
+                statusDot.className = `status-dot ${status}`;
+                
+                switch(status) {
+                    case 'connected':
+                        statusText.textContent = 'Live';
+                        dataFeedStatus.textContent = 'Live';
+                        break;
+                    case 'simulation':
+                        statusText.textContent = 'Simulation';
+                        dataFeedStatus.textContent = 'Simulation';
+                        break;
+                    case 'error':
+                        statusText.textContent = 'Error';
+                        dataFeedStatus.textContent = 'Error';
+                        break;
+                    case 'fallback':
+                        statusText.textContent = 'Fallback';
+                        dataFeedStatus.textContent = 'Fallback';
+                        break;
+                    default:
+                        statusText.textContent = 'Connecting...';
+                        dataFeedStatus.textContent = 'Connecting...';
+                }
+            }
+
+            updatePriceDisplay(priceData) {
+                const { symbol, price, change, changePercent } = priceData;
+                
+                document.getElementById('currentPrice').textContent = `$${price.toFixed(2)}`;
+                
+                const changeElement = document.getElementById('priceChange');
+                const changeValue = change >= 0 ? `+${change.toFixed(2)}` : `${change.toFixed(2)}`;
+                const percentValue = changePercent >= 0 ? `+${changePercent.toFixed(2)}%` : `${changePercent.toFixed(2)}%`;
+                
+                changeElement.textContent = `${changeValue} (${percentValue})`;
+                changeElement.className = `stat-change ${change >= 0 ? 'positive' : 'negative'}`;
+            }
+
+            updateActiveSymbol(symbol) {
+                document.getElementById('activeSymbol').textContent = symbol;
+            }
+
+            updateStrategyElementsCount() {
+                // This would count elements from the trading interface
+                const count = 0; // Placeholder - would get from actual interface
+                document.getElementById('strategyElements').textContent = count;
+            }
+
+            showNotification(message, type = 'info', duration = 5000) {
+                const container = document.getElementById('notificationContainer');
+                const notification = document.createElement('div');
+                notification.className = `notification ${type}`;
+                notification.textContent = message;
+
+                container.appendChild(notification);
+
+                // Trigger animation
+                setTimeout(() => {
+                    notification.classList.add('show');
+                }, 100);
+
+                // Auto remove
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                    setTimeout(() => {
+                        if (notification.parentNode) {
+                            notification.parentNode.removeChild(notification);
+                        }
+                    }, 300);
+                }, duration);
+            }
+        }
+
+        // Initialize the application when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            window.quantumTradingApp = new QuantumTradingApp();
+        });
+
+        // Export for global access
+        window.QuantumTradingApp = QuantumTradingApp;
+    </script>
+</body>
+</html>

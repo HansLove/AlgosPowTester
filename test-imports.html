@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Import Test</title>
+</head>
+<body>
+    <h1>Testing Imports</h1>
+    <div id="status"></div>
+    
+    <script type="module">
+        try {
+            console.log('Testing imports...');
+            
+            const { TradingInterface } = await import('./scripts/trading-interface.js');
+            const { MarketDataFeed } = await import('./scripts/data-feed.js');
+            const { RealTimeChartEngine } = await import('./scripts/chart-engine.js');
+            
+            console.log('All imports successful!');
+            console.log('TradingInterface:', TradingInterface);
+            console.log('MarketDataFeed:', MarketDataFeed);
+            console.log('RealTimeChartEngine:', RealTimeChartEngine);
+            
+            document.getElementById('status').innerHTML = `
+                <p style="color: green;">✅ All imports successful!</p>
+                <p>TradingInterface: ${typeof TradingInterface}</p>
+                <p>MarketDataFeed: ${typeof MarketDataFeed}</p>
+                <p>RealTimeChartEngine: ${typeof RealTimeChartEngine}</p>
+            `;
+            
+        } catch (error) {
+            console.error('Import error:', error);
+            document.getElementById('status').innerHTML = `
+                <p style="color: red;">❌ Import error: ${error.message}</p>
+                <pre>${error.stack}</pre>
+            `;
+        }
+    </script>
+</body>
+</html>
